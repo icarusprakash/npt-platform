@@ -1,7 +1,7 @@
-# New Projects Tracker — AI Intelligence Platform
+# NPT Intelligence — AI-Powered Capital Investment Intelligence Platform
 ## Master Build Document
 **Version 2.0 — Complete Platform Rebuild**
-**Last Updated: 02 April 2026**
+**Last Updated: 06 April 2026 (Day 1 Complete)**
 
 ---
 
@@ -10,6 +10,19 @@
 This README replaces all previous session logs. Version 1.0 (the experimental AI engine at newprojectstracker.in) has been retired. All databases from V1.0 are preserved and reused in V2.0.
 
 **The plan is locked. No mid-build changes. New ideas go to a separate ideas log.**
+
+---
+
+## Day 1 Summary (06 April 2026) ✅
+
+- **Brand name locked:** NPT Intelligence
+- **Domain locked:** `newprojectstracker.in` — building here now. Premium `.ai` domain deferred to post-launch (cost prohibitive at this stage)
+- **Legacy site clarified:** `newprojectstracker.com` is the existing production site — 50k+ ranked public pages, 30k registered users, live paid dashboard. **Never touch this.**
+- **public_html wiped clean:** Only `dumps/` and `logs/` folders retained on server
+- **Placeholder live:** `newprojectstracker.in` is live with navy holding page — "NPT Intelligence / Something powerful is coming."
+- **Logo:** Brief handed to designer — expected this evening
+- **Tagline shortlisted:** *"Where India Invests Next"* (preferred) — to confirm with designer
+- **Company rename:** Founder considering renaming to NPT Intelligence Pvt Ltd — deferred, no action needed now
 
 ---
 
@@ -28,12 +41,15 @@ A full SaaS product with:
 
 ---
 
-## Domain Decision (Pending — Decide Day 1)
+## Domain & Brand (Locked ✅)
 
-**Option A:** `newprojectstracker.in` (existing, established)
-**Option B:** `newprojectstracker.ai` (new, modern, AI-forward)
+- **Platform name:** NPT Intelligence
+- **Build domain:** `newprojectstracker.in`
+- **Legacy domain:** `newprojectstracker.com` — production site, 50k+ ranked pages, 30k users. **Never touch.**
+- **Premium domain:** `nptintelligence.ai` — desirable, deferred to post-launch (cost prohibitive now)
+- **Tagline:** *"Where India Invests Next"* — preferred, confirm with designer
 
-**Note:** Database is on Hostinger VPS — completely domain-independent. Switching domains = DNS change only. No database work.
+**Context:** This new platform is a complementary AI-enriched product alongside the legacy .com site. Both coexist. Existing NPT users get access to this as a complement; new subscribers come in independently.
 
 ---
 
@@ -108,7 +124,7 @@ nohup bash -c 'while true; do php /var/www/html/tag.php --cron >> /var/log/npt_t
 
 ---
 
-## Day 1 Startup Checklist
+## Day 1 Startup Checklist ✅ COMPLETE
 
 ### Step 1 — Clean up public_html
 Login to CyberPanel → File Manager → `public_html/`
@@ -123,7 +139,7 @@ cd /home/newprojectstracker.in/public_html
 find . -maxdepth 1 -not -name '.' -not -name 'dumps' -not -name 'logs' -exec rm -rf {} +
 ```
 
-### Step 2 — Decide domain (.in or .ai)
+### Step 2 — Domain ✅ Locked: newprojectstracker.in
 If keeping `.in` → no action needed
 If switching to `.ai`:
 - Purchase `newprojectstracker.ai`
@@ -135,7 +151,7 @@ If switching to `.ai`:
 Share logo PNG file. If no logo ready, we'll create a text-based logo in code.
 
 ### Step 4 — Begin Day 1 module
-Build design system + home page.
+Build design system + home page (which doubles as the waitlist landing page — see below).
 
 ---
 
@@ -198,7 +214,8 @@ Build design system + home page.
 
 ```
 newprojectstracker.in (or .ai)
-├── / (public home page)
+├── / (public home page — also serves as waitlist landing page in Phase 1)
+├── /early-access (waitlist landing page — Phase 2 onwards, after corporate site is live)
 ├── /about
 ├── /solutions
 ├── /pricing
@@ -255,6 +272,48 @@ crm.newprojectstracker.in (internal)
 
 ---
 
+## Waitlist Landing Page Strategy
+
+### Phase 1 — Home page IS the landing page
+After Week 1 (public corporate pages) is complete, the site goes live immediately with the home page doubling as a waitlist capture page.
+
+**Goal:** Build an audience while the dashboard is being built.
+
+**The home page will have:**
+- Strong hero — what NPT is, who it's for, why it matters
+- Enough signal to kindle curiosity — project count stats, industry coverage, key use cases
+- A prominent capture form: name + email + company + "I'm an existing NPT subscriber" checkbox
+- Two queues stored in DB:
+  - General waitlist (new visitors)
+  - Priority queue (existing NPT subscribers — checkbox triggers this)
+- CTA where the dashboard link would normally be → routes to the capture form instead
+- No login, no dashboard access — just the waitlist
+
+**What the home page will NOT have in Phase 1:**
+- Separate About / Solutions / Pricing pages (not yet built)
+- Any working dashboard links
+
+### Phase 2 — Full corporate site goes live
+Once enough dashboard progress exists to show prospects:
+- Build About, Solutions, Pricing, Contact pages
+- Home page becomes a proper corporate homepage
+- Waitlist capture form moves to `/early-access`
+- `/early-access` remains live even after full launch for drip campaigns
+
+### Database Table: npt_waitlist
+```
+id, email, full_name, company, is_existing_subscriber (boolean),
+queue_type (general/priority), ip_address, joined_at
+```
+
+### Rules for the waitlist page
+- Content for the page decided at build time (not pre-planned)
+- Keep it curiosity-first — don't reveal the full product
+- One clear CTA above the fold
+- Mobile responsive — many visitors will be on phones
+
+---
+
 ## Subscription & Payments
 
 ### Online (Razorpay)
@@ -272,6 +331,12 @@ crm.newprojectstracker.in (internal)
 ---
 
 ## New Database Tables (to create in V2.0)
+
+### npt_waitlist (Phase 1 — build on Day 1)
+```
+id, email, full_name, company, is_existing_subscriber (boolean),
+queue_type (general/priority), ip_address, joined_at
+```
 
 ### npt_users (replaces npt_ai_users)
 ```
@@ -333,11 +398,13 @@ proj_id_added, credits_given, created_at
 ### Week 1 — Foundation & Public Website
 | Day | Module | Task |
 |-----|--------|------|
-| 1 | Setup + Design | Clean public_html, domain decision, design system file, home page |
+| 1 | Setup + Design | ✅ public_html wiped, domain locked, placeholder live at newprojectstracker.in. Logo with designer. Day 2: design system + home page. |
 | 2 | Public Pages | About, Solutions, Contact pages |
 | 3 | Auth Pages | Register, Login, Forgot Password |
 | 4 | Pricing Page | Plan cards, Razorpay integration setup |
 | 5 | SEO Pages | Project story page, Company page, Tag page (public versions) |
+
+**→ After Day 5: Go live. Home page serves as waitlist landing page. Begin building audience.**
 
 ### Week 2 — Dashboard Core
 | Day | Module | Task |
@@ -400,7 +467,7 @@ proj_id_added, credits_given, created_at
 | 37 | Anti-scraping | Rate limiting, honeypots, bot detection |
 | 38 | Security Audit | SQL injection, XSS, session security |
 | 39 | Performance | Indexes, caching, image optimization |
-| 40 | Soft Launch | Onboard existing NPT users, send emails |
+| 40 | Full Launch | Move waitlist form to /early-access, onboard existing NPT users, send emails |
 
 ### Background (runs parallel, when API credits available)
 - AI enrichment — Layer 2 (opportunity intelligence)
@@ -442,7 +509,7 @@ proj_id_added, credits_given, created_at
 
 | Decision | Choice |
 |----------|--------|
-| Domain | newprojectstracker.in OR .ai — decide Day 1 |
+| Domain | newprojectstracker.in ✅ Locked |
 | Pricing — Basic | ₹14,950 + GST / month / 1 user |
 | Pricing — Premium | ₹99,000 + GST / year / 1 user |
 | Free plan | 5 projects/month, no rollover |
@@ -454,6 +521,7 @@ proj_id_added, credits_given, created_at
 | Newsletter | Daily digest — free gets standard, paid gets filtered |
 | nptstore.in | Integrate report store after core launch |
 | News | Free forever for all users — daily hook |
+| Waitlist home page | Live after Week 1 — moves to /early-access at full launch ✅ |
 
 ---
 
