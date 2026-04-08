@@ -1,7 +1,7 @@
 # NPT Intelligence — AI-Powered Capital Investment Intelligence Platform
 ## Master Build Document
 **Version 2.0 — Complete Platform Rebuild**
-**Last Updated: 08 April 2026 (Day 3 Complete)**
+**Last Updated: 08 April 2026 (Day 3 + Day 4 Complete)**
 
 ---
 
@@ -402,7 +402,7 @@ proj_id_added, credits_given, created_at
 | 1 | Setup + Design | ✅ public_html wiped, domain locked, placeholder live at newprojectstracker.in. Logo with designer. Day 2: design system + home page. |
 | 2 | Waitlist Landing Page | ✅ Home page built and live at newprojectstracker.in — hero, problem section, timeline visual, platform features, 16 industries grid, who-its-for, waitlist form with DB capture, footer. DM Serif Display + DM Sans fonts. Fully mobile responsive. |
 | 3 | Auth Pages | ✅ Register, Login, Forgot Password, Logout, Dashboard placeholder — all live. npt_users + npt_password_resets tables auto-created. Session auth working. |
-| 4 | Pricing Page | Plan cards, Razorpay integration setup |
+| 4 | Pricing Page | ✅ dashboard/pricing.php — 3 plan cards (Free/Basic/Premium), GST calculated, current plan highlighted, upgrade modal with email fallback, FAQ accordion, contact band. Razorpay integration deferred — placeholder in place. |
 | 5 | SEO Pages | Project story page, Company page, Tag page (public versions) |
 
 **→ After Day 5: Go live. Home page serves as waitlist landing page. Begin building audience.**
