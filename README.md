@@ -1,7 +1,7 @@
 # NPT Intelligence — AI-Powered Capital Investment Intelligence Platform
 ## Master Build Document
 **Version 2.0 — Complete Platform Rebuild**
-**Last Updated: 09 April 2026 (Day 5 Complete)**
+**Last Updated: 09 April 2026 (Day 5 + Day 6 Complete)**
 
 ---
 
@@ -410,7 +410,7 @@ proj_id_added, credits_given, created_at
 ### Week 2 — Dashboard Core
 | Day | Module | Task |
 |-----|--------|------|
-| 6 | Dashboard Layout | Sidebar, header, routing system |
+| 6 | Dashboard Layout | ✅ _layout.php + _auth.php + _layout_end.php shared includes. Dashboard index with stat cards + recent projects table. Project story page (project.php) with 4 tabs: Overview, Intelligence (AI), Contacts, Related. Credit gate modal for exhausted users. proj_industry used throughout. |
 | 7 | Dashboard Entry | Feed page — project cards + news + stats widgets |
 | 8 | Project Listing | Search + 4 filters + results table |
 | 9 | Project Story | Full project page (dashboard version) |
