@@ -1,7 +1,7 @@
 # NPT Intelligence — AI-Powered Capital Investment Intelligence Platform
 ## Master Build Document
 **Version 2.0 — Complete Platform Rebuild**
-**Last Updated: 08 April 2026 (Day 3 + Day 4 Complete)**
+**Last Updated: 09 April 2026 (Day 5 Complete)**
 
 ---
 
@@ -403,7 +403,7 @@ proj_id_added, credits_given, created_at
 | 2 | Waitlist Landing Page | ✅ Home page built and live at newprojectstracker.in — hero, problem section, timeline visual, platform features, 16 industries grid, who-its-for, waitlist form with DB capture, footer. DM Serif Display + DM Sans fonts. Fully mobile responsive. |
 | 3 | Auth Pages | ✅ Register, Login, Forgot Password, Logout, Dashboard placeholder — all live. npt_users + npt_password_resets tables auto-created. Session auth working. |
 | 4 | Pricing Page | ✅ dashboard/pricing.php — 3 plan cards (Free/Basic/Premium), GST calculated, current plan highlighted, upgrade modal with email fallback, FAQ accordion, contact band. Razorpay integration deferred — placeholder in place. |
-| 5 | SEO Pages | Project story page, Company page, Tag page (public versions) |
+| 5 | SEO Pages | ✅ projects_slug.php, companies_slug.php, states_slug.php live. Clean public titles (no company names), content gate for guests, pagination lock on page 2+. proj_industry used as primary sector field (proj_sector is NULL for most records). |
 
 **→ After Day 5: Go live. Home page serves as waitlist landing page. Begin building audience.**
 
