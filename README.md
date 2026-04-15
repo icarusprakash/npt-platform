@@ -1,340 +1,226 @@
-# NPT Project Vendor Directory — Build README
+# NPT Intelligence Platform — Build README
 
-**Last Updated: 14 April 2026 (Day 1 — Planning)**
-
----
-
-## Overview
-
-A standalone, publicly accessible directory of project vendors — companies that supply equipment, services, and contracting to industrial and infrastructure projects across India. Built as a subdomain of newprojectstracker.in but completely independent in codebase, database, and user base.
-
-**Core concept:**
-- Vendors register and submit their company details
-- Staff screens and approves each listing before it goes live
-- Anyone can browse and filter the directory publicly
-- Mobile number and email are hidden behind a free login wall
-- Project promoters and purchase managers register (free) just to access contact details
-
-This is the supply-side complement to the NPT Intel platform. NPT Intel helps vendors find projects. This directory helps project buyers find vendors.
+**Last Updated: 15 April 2026 (Day 11 — Forenoon Session End)**
 
 ---
 
 ## Server Details
-
-- **Subdomain:** vendors.newprojectstracker.in
+- **Domain:** newprojectstracker.in
 - **IP:** 31.97.228.143
 - **Stack:** AlmaLinux 9, CyberPanel, LiteSpeed, PHP 8.0, MariaDB
-- **DB:** nptvd_db (separate from NPT Intel's newp_ai_engine)
-- **DB User:** nptvd_user / (to be set on server)
+- **DB:** newp_ai_engine
+- **DB User:** newp_npt_ai_user / npt_ai_user@123
 - **MySQL root config:** /root/.my_temp.cnf
-- **GitHub:** https://github.com/icarusprakash/npt-vendor-directory (to be created)
-- **All files live at:** /home/vendors.newprojectstracker.in/public_html/
+- **GitHub:** https://github.com/icarusprakash/npt-ai-engine
+- **All dashboard files live at:** /home/newprojectstracker.in/public_html/dashboard/
 
 ---
 
-## What This Site Is NOT
-
-- Not connected to the NPT Intel dashboard or its database
-- Not a marketplace — no RFQs, no transactions, no messaging between parties
-- Not a paid listing service at launch — free to list, free to browse (monetisation later)
-- Not a project database — it lists vendors only, not projects
-
----
-
-## User Types
-
-### 1. Vendor (listing owner)
-- Registers to submit their company for listing
-- Fills out vendor registration form
-- Waits for staff approval before listing goes live
-- Can log in to edit their listing after approval
-
-### 2. Browser (project promoter / purchase manager)
-- Registers for free just to view contact details
-- No listing, no fee, no approval needed
-- Sees full vendor profile including mobile number and email once logged in
-
-### 3. Staff / Admin
-- Reviews pending vendor submissions
-- Approves or rejects with optional rejection note
-- Can edit, suspend, or delete any listing
-- Manages user accounts
+## Source Tables — Current State
+- `npis_projects` — **0 rows** (wiped, awaiting full clean import)
+- `npis_companies` — **0 rows** (wiped)
+- `npis_refer` — **0 rows** (wiped)
+- PRIMARY KEY added on `npis_projects(proj_id)` ✅
+- PRIMARY KEY added on `npis_companies(comp_id)` ✅
+- **KEY RULE:** Use `proj_industry` NOT `proj_sector`
+- **KEY RULE:** Project name column is `proj_project` NOT `proj_name`
+- **KEY RULE:** Project primary key is `proj_id` NOT `id`
 
 ---
 
-## Database — nptvd_db
+## Data Import — Current Status
 
-### Table: vpd_users
-Stores all registered users (both vendors and browsers).
+### What happened
+- Batch 0 (Jan 2024–Dec 2025) was pre-loaded — 6,511 projects
+- Batch 1 (Jan 2023–Dec 2024) was imported today — caused overlap and duplicates
+- Root cause: npis_projects had no PRIMARY KEY, so INSERT IGNORE did not prevent duplicates
+- Decision: wipe all three tables and start fresh with one complete export
 
-```sql
-CREATE TABLE vpd_users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  full_name VARCHAR(255),
-  phone VARCHAR(20),
-  company VARCHAR(255),
-  designation VARCHAR(255),
-  user_type ENUM('vendor', 'browser') NOT NULL DEFAULT 'browser',
-  email_verified TINYINT(1) DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  last_login TIMESTAMP NULL
-);
+### What to do next
+Ask DBA to export **complete dataset — all years 2017 to April 2026 — in one single export**. No year splitting. Three files: `npis_projects.sql`, `npis_companies.sql`, `npis_refer.sql`. Upload to Claude, clean, import once.
+
+### Import command (use for all imports)
+```bash
+mysql -u newp_npt_ai_user -p'npt_ai_user@123' newp_ai_engine --default-character-set=utf8mb4 < /home/newprojectstracker.in/public_html/dumps/filename.sql 2>&1 | tail -5
 ```
 
-### Table: vpd_vendors
-One row per vendor listing. Linked to vpd_users via user_id.
+### Import order (always)
+1. npis_companies_clean.sql
+2. npis_projects_clean.sql
+3. npis_refer_clean.sql
 
-```sql
-CREATE TABLE vpd_vendors (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  company_name VARCHAR(255) NOT NULL,
-  slug VARCHAR(255) NOT NULL UNIQUE,
-  tagline VARCHAR(255),
-  description TEXT,
-  category_id INT,
-  industry_tags VARCHAR(500),
-  state VARCHAR(100),
-  city VARCHAR(100),
-  website VARCHAR(255),
-  contact_person VARCHAR(255),
-  contact_phone VARCHAR(20),
-  contact_email VARCHAR(255),
-  year_established YEAR,
-  logo_path VARCHAR(255),
-  status ENUM('pending', 'approved', 'rejected', 'suspended') DEFAULT 'pending',
-  rejection_note TEXT,
-  submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  approved_at TIMESTAMP NULL,
-  updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES vpd_users(id) ON DELETE CASCADE
-);
+### After import — verify counts
+```bash
+mysql -u newp_npt_ai_user -p'npt_ai_user@123' newp_ai_engine -e "
+SELECT COUNT(*) as projects FROM npis_projects;
+SELECT COUNT(*) as companies FROM npis_companies;
+SELECT COUNT(*) as refer FROM npis_refer;
+"
 ```
 
-### Table: vpd_categories
-Master list of vendor categories (equipment type, service type, etc.)
-
-```sql
-CREATE TABLE vpd_categories (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  category_name VARCHAR(255) NOT NULL,
-  parent_id INT DEFAULT NULL,
-  sort_order INT DEFAULT 0
-);
+### After import — delete dump files immediately
+```bash
+rm /home/newprojectstracker.in/public_html/dumps/npis_companies_clean.sql
+rm /home/newprojectstracker.in/public_html/dumps/npis_projects_clean.sql
+rm /home/newprojectstracker.in/public_html/dumps/npis_refer_clean.sql
 ```
 
-### Table: vpd_password_resets
-
-```sql
-CREATE TABLE vpd_password_resets (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  email VARCHAR(255) NOT NULL,
-  token VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  expires_at TIMESTAMP NOT NULL
-);
-```
+**See DATA_IMPORT_GUIDE.md for full error solutions and cleaning process.**
 
 ---
 
-## Vendor Registration Form Fields
-
-**Mandatory:**
-- Company Name
-- Category (dropdown from vpd_categories)
-- State (dropdown — all Indian states)
-- City
-- Contact Person Name
-- Contact Phone (hidden from public — login required)
-- Contact Email (hidden from public — login required)
-- Brief Description (max 500 characters)
-
-**Optional:**
-- Tagline (one line — max 100 characters)
-- Industry Tags (multi-select — Hospitality, Chemicals, Cement, Power, Pharma, Oil & Gas, Steel, Infrastructure, etc.)
-- Website URL
-- Year Established
-- Company Logo (image upload)
+## Platform Tables (npt_ prefix)
+- `npt_users` — registered users
+- `npt_waitlist` — waitlist captures
+- `npt_password_resets` — reset tokens
+- `npt_briefcase` — saved projects (user_id, proj_id, saved_at)
+- `npt_watchlist_phrases` — user watch phrases (max 5 per user)
+- `npt_watchlist_projects` — matched projects per user (max 50 per user)
 
 ---
 
-## Directory Page — Public
-
-**URL:** vendors.newprojectstracker.in/
-
-**What's visible to everyone (no login):**
-- Company name
-- Category
-- Tagline
-- State / City
-- Industry tags
-- Year established
-- Website link (if provided)
-- "View Profile" button
-
-**What requires login:**
-- Contact person name
-- Mobile number
-- Email address
-
-**Filters available:**
-- Category (dropdown)
-- Industry (multi-select)
-- State (dropdown)
-- Keyword search (searches company name + description + tagline)
-
-**Default sort:** Newest approved first
-**Pagination:** 20 listings per page
+## npt_users Schema
+id, email, username, password_hash, full_name, company, designation, phone,
+plan_type (free/basic/premium), plan_status (active/expired/suspended),
+plan_start, plan_end, credits_monthly, credits_used, credits_reset_date,
+daily_limit, daily_used, daily_reset, weekly_limit, weekly_used, weekly_reset,
+**state_access** (VARCHAR 500, default 'all'),
+**industry_access** (VARCHAR 500, default 'all'),
+source, imported_from_npt, email_verified, created_at, last_login
 
 ---
 
-## Vendor Profile Page — Public
+## npt_watchlist_phrases Schema
+id, user_id, phrase (VARCHAR 255), phrase_type (ENUM: keyword/company/industry/state), created_at
 
-**URL:** vendors.newprojectstracker.in/vendor/[slug]/
-
-**Sections:**
-1. Company header — logo, name, tagline, category badge, location
-2. About — full description
-3. Industries served — tag pills
-4. Details — year established, website
-5. Contact block — shown only to logged-in users. If not logged in, shows "Login to view contact details" prompt with register/login CTA.
+## npt_watchlist_projects Schema
+id, user_id, proj_id, matched_phrase (VARCHAR 255), matched_at, is_new (TINYINT, default 1)
+- UNIQUE KEY on (user_id, proj_id)
+- is_new = 1 until user visits watchlist page (powers sidebar badge)
 
 ---
 
-## Auth Pages
-
-| Page | URL | Notes |
-|------|-----|-------|
-| Register | /register/ | Captures name, email, phone, password. User selects type: "I am a vendor" or "I want to find vendors". Vendor type → redirected to vendor submission form after registration. Browser type → redirected to directory. |
-| Login | /login/ | Standard email + password |
-| Forgot Password | /forgot-password/ | Token-based reset |
-| My Listing | /my-listing/ | Vendor only — view and edit their approved listing. Shows pending/rejected status if not yet approved. |
-| My Account | /my-account/ | Edit profile details, change password |
+## Test Users
+| Email | Role | Password | Plan |
+|-------|------|----------|------|
+| icarusprakash@gmail.com | Super Admin | (existing) | Basic, 1000 credits |
+| sbirumca85@gmail.com | Admin Manager | NPTAdmin@2026 | Basic, 1000 credits |
+| revathid883@gmail.com | Test Subscriber | (existing) | Basic |
+| kavi.santhi@gmail.com | Test Free User | (existing) | Free |
 
 ---
 
 ## Admin Panel
+- **URL:** /dashboard/admin/
+- **Allowed admins:** icarusprakash@gmail.com, sbirumca85@gmail.com
+- **Files:** /dashboard/admin/index.php, /dashboard/admin/user.php
 
-**URL:** vendors.newprojectstracker.in/admin/
+### Admin index.php features:
+- Stat cards, user table, search + plan filter, quick actions
 
-**Access:** Hardcoded admin emails — icarusprakash@gmail.com, sbirumca85@gmail.com
-
-### Admin Pages
-
-| Page | Purpose |
-|------|---------|
-| admin/index.php | Dashboard — stat cards (total vendors, pending, approved, rejected, total users, browsers, vendors) + recent submissions table |
-| admin/pending.php | Queue of pending vendor submissions — view details, approve or reject (with note) |
-| admin/vendors.php | All approved listings — search, filter, edit, suspend, delete |
-| admin/users.php | All registered users — search, filter by type, suspend |
-| admin/categories.php | Manage vendor categories — add, edit, delete, reorder |
-
-### Approval Flow
-1. Vendor submits form → status = `pending`
-2. Admin reviews in pending.php
-3. Admin approves → status = `approved`, listing goes live, approval email sent to vendor
-4. Admin rejects → status = `rejected`, rejection note saved, rejection email sent to vendor
-5. Vendor can resubmit after editing (status resets to `pending`)
+### Admin user.php features:
+- 3 tabs: Activity | Subscription Controls | Access Controls
+- State + industry access controls with checkbox grid
+- Single save updates all fields
 
 ---
 
-## File Structure
+## Credit System
+| Plan    | Monthly | Daily | Weekly |
+|---------|---------|-------|--------|
+| Free    | 5       | —     | —      |
+| Basic   | 400     | 30    | 100    |
+| Premium | 10,000  | 50    | 600    |
 
+---
+
+## Dashboard Pages — Status
+
+| File | Status | Notes |
+|------|--------|-------|
+| _auth.php | ✅ | Auth guard |
+| _layout.php | ✅ | Sidebar + topbar. Watchlist nav item + badge. |
+| _layout_end.php | ✅ | Closes dashboard body |
+| index.php | ✅ | Stat cards + recent projects |
+| projects.php | ✅ | Search + filters + pagination. Enforces state_access + industry_access. |
+| project.php | ✅ | 4 tabs. Credit gate. Restriction modal. |
+| companies.php | ✅ | Card grid, search, state filter |
+| company.php | ✅ | Company profile + associated projects |
+| briefcase.php | ✅ | Saved projects with AJAX remove |
+| briefcase_toggle.php | ✅ | AJAX save/unsave handler |
+| watchlist.php | ✅ | Phrase manager + matched projects |
+| usage.php | ✅ | Monthly/daily/weekly usage stats |
+| profile.php | ✅ | Edit profile, change password |
+| pricing.php | ✅ | Plans & pricing (needs layout refactor) |
+| admin/index.php | ✅ | User list, stat cards, quick actions |
+| admin/user.php | ✅ | Full user control panel with access controls |
+
+---
+
+## Watchlist Feature
+- Max 5 watch phrases per user (all plan types)
+- Industry + State use autocomplete; Keyword + Company are free text
+- Forward-only matching — no retroactive search on existing data
+- Matching logic fires when new projects added via daily CRUD (TO BUILD)
+- Max 50 projects per watchlist, shows 5 most recent
+- Sidebar badge shows new match count (clears on visit)
+
+---
+
+## Access Controls
+- `state_access` and `industry_access` columns in `npt_users`
+- `all` = no restriction; `gujarat,maharashtra` = comma-separated list
+- Enforced in projects.php (hard WHERE clause) and project.php (restriction modal)
+- Admin can set per user via admin/user.php
+
+---
+
+## Public Pages — REVISED SCOPE
+- No individual project detail pages publicly
+- Phase 3: company listing pages + product tag pages only
+- Parked: states_slug.php, projects_slug.php (scrapped), companies_slug.php
+
+---
+
+## Razorpay Payment Integration — PENDING
+- Domain verified ✅
+- Key ID: rzp_live_D1cUKmkOav2Xx9
+- Key Secret: pending — Jp to coordinate with Shopify vendor to regenerate safely
+- Build plan ready: create_order.php → pricing.php checkout → payment_verify.php → webhook
+
+---
+
+## Next Tasks (In Priority Order)
+
+| # | Task | Notes |
+|---|------|-------|
+| 1 | **Full data import** | DBA to export complete 2017–Apr 2026 dataset in one shot. Upload to Claude → clean → import. |
+| 2 | **Staff testing** | Revathi + Sbiru to test access controls. Report bugs. |
+| 3 | **Daily projects CRUD** | Admin form to add projects. Triggers watchlist matching. |
+| 4 | **Razorpay keys** | Jp to sort with Shopify vendor. |
+| 5 | **Razorpay payment integration** | Once keys available |
+| 6 | **login.php** | Set credits_reset_date on registration |
+| 7 | **Email verification** | Send on register via AWS SES |
+| 8 | **Pricing.php** | Refactor to shared _layout.php |
+| 9 | **Public pages Phase 3** | Company + product tag pages |
+| 10 | **Dashboard home enrichment** | News feed, recently added companies |
+
+---
+
+## Design System (Locked)
+- Navy: #1a3c6e, Orange: #e87722, Gray BG: #f5f7fa
+- Fonts: DM Serif Display (headings) + DM Sans (body)
+- Base font size: 16px in dashboard
+
+---
+
+## Sidebar Nav Structure
 ```
-/public_html/
-│
-├── index.php               ← Directory listing page (public)
-├── vendor.php              ← Individual vendor profile (public)
-├── register.php            ← Registration page
-├── login.php               ← Login page
-├── logout.php              ← Logout handler
-├── forgot-password.php     ← Password reset request
-├── reset-password.php      ← Password reset form
-├── my-listing.php          ← Vendor's own listing management (auth required)
-├── my-account.php          ← User profile edit (auth required)
-├── submit-vendor.php       ← Vendor submission form (auth required)
-│
-├── _auth.php               ← Auth guard — include at top of protected pages
-├── _layout.php             ← Shared header + nav + CSS
-├── _layout_end.php         ← Shared footer + JS
-│
-├── admin/
-│   ├── index.php           ← Admin dashboard
-│   ├── pending.php         ← Approval queue
-│   ├── vendors.php         ← All listings management
-│   ├── users.php           ← User management
-│   └── categories.php      ← Category management
-│
-├── uploads/
-│   └── logos/              ← Vendor logo uploads
-│
-└── assets/
-    ├── css/
-    └── js/
+MAIN:         Dashboard, Projects (Soon), Companies (Soon), Briefcase (Soon), Watchlist
+INTELLIGENCE: News Feed (Soon), Analytics (Soon)
+ACCOUNT:      My Profile (Soon), Plans & Pricing
+Premium only: AI Apps, Workspaces
 ```
-
----
-
-## Design System
-
-Consistent with newprojectstracker.in:
-- **Navy:** #1a3c6e
-- **Orange:** #e87722
-- **Gray BG:** #f5f7fa
-- **Fonts:** DM Serif Display (headings) + DM Sans (body)
-- Clean, minimal, professional — not flashy
-- Mobile responsive throughout
-
----
-
-## Key Rules (Non-Negotiable)
-
-- Contact phone and email NEVER visible without login — enforced server-side, not just CSS
-- All vendor listings go through staff approval before going live — no auto-publish
-- Admin panel accessible only to whitelisted email addresses
-- Slug generated from company name — URL-safe, lowercase, hyphenated
-- Logo uploads: max 1MB, JPG/PNG only, stored in /uploads/logos/
-- newprojectstracker.com: NEVER TOUCH (legacy site on GoDaddy)
-- This site's DB (nptvd_db) is fully separate — never query newp_ai_engine from this codebase
-
----
-
-## Phase Plan
-
-### Phase 1 — Core Directory (Build First)
-- [ ] Server setup — subdomain, DB, file structure
-- [ ] DB tables created
-- [ ] Auth system — register, login, logout, forgot password
-- [ ] Vendor submission form
-- [ ] Admin panel — pending queue, approve/reject
-- [ ] Public directory page with filters
-- [ ] Individual vendor profile page
-- [ ] My Listing page for vendors
-- [ ] Basic email notifications (approval, rejection)
-
-### Phase 2 — Enrichment (After Initial Traction)
-- [ ] Logo upload on vendor profiles
-- [ ] Featured listings (manual admin flag — for later monetisation)
-- [ ] Search engine optimisation — meta tags, clean URLs, sitemap
-- [ ] "Claim your listing" flow — staff seeds a listing, vendor claims it
-- [ ] Social share buttons on vendor profiles
-
-### Phase 3 — Monetisation (When Ready)
-- [ ] Paid featured placement
-- [ ] Premium vendor profiles (enhanced fields, gallery, brochure upload)
-- [ ] Lead tracking — how many times was your contact viewed?
-- [ ] Cross-link with NPT Intel — "This vendor is also on NPT Intel"
-
----
-
-## Launch Campaign Plan
-
-1. Export all hospitality + industrial vendor contacts from NPT subscriber base
-2. Email campaign: "List your company free on NPT Vendor Directory — get discovered by project buyers"
-3. Incentive: Registered vendors get 5 free NPT project leads per month
-4. Separately target project promoters and purchase managers to register as browsers
 
 ---
 
@@ -342,4 +228,22 @@ Consistent with newprojectstracker.in:
 
 | Day | Date | Key Deliverables |
 |-----|------|-----------------|
-| 1 | 14 Apr 2026 | README drafted. Concept finalised. Scope locked. |
+| 1 | Early Apr | Placeholder page deployed |
+| 2 | Early Apr | Waitlist landing page live |
+| 3–8 | Apr | Full dashboard built |
+| 9 | 14 Apr AM | Fixed admin panel. Built admin/user.php. State/industry access controls. Test briefs. |
+| 10 | 14 Apr PM | Access controls enforced. Watchlist feature built. Razorpay domain verified. |
+| 11 | 15 Apr AM | Data import pipeline built. Cleaning script written. Import attempted — discovered no PRIMARY KEY on npis_projects causing duplicates. Tables wiped. PRIMARY KEYs added on proj_id and comp_id. DBA to re-export complete dataset (2017–Apr 2026) as one single file. |
+
+---
+
+## Key Rules (Non-Negotiable)
+- **newprojectstracker.com: NEVER TOUCH**
+- Company names: ONLY visible on project.php. NEVER in listings.
+- `proj_industry` = primary sector field (NOT proj_sector)
+- `proj_project` = project name field (NOT proj_name)
+- `proj_id` = primary key (NOT id)
+- No public project detail pages
+- Delete SQL dump files from server immediately after import
+- Always verify PRIMARY KEY exists before importing: `SHOW KEYS FROM npis_projects WHERE Key_name = 'PRIMARY';`
+- Never split exports by year — always import complete dataset in one shot
