@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 15 April 2026 (Day 11 — Forenoon Session End)**
+**Last Updated: 16 April 2026 (Day 12 — Session End)**
 
 ---
 
@@ -10,62 +10,212 @@
 - **Stack:** AlmaLinux 9, CyberPanel, LiteSpeed, PHP 8.0, MariaDB
 - **DB:** newp_ai_engine
 - **DB User:** newp_npt_ai_user / npt_ai_user@123
-- **MySQL root config:** /root/.my_temp.cnf
 - **GitHub:** https://github.com/icarusprakash/npt-ai-engine
-- **All dashboard files live at:** /home/newprojectstracker.in/public_html/dashboard/
+- **All dashboard files:** /home/newprojectstracker.in/public_html/dashboard/
 
 ---
 
-## Source Tables — Current State
-- `npis_projects` — **0 rows** (wiped, awaiting full clean import)
-- `npis_companies` — **0 rows** (wiped)
-- `npis_refer` — **0 rows** (wiped)
-- PRIMARY KEY added on `npis_projects(proj_id)` ✅
-- PRIMARY KEY added on `npis_companies(comp_id)` ✅
-- **KEY RULE:** Use `proj_industry` NOT `proj_sector`
-- **KEY RULE:** Project name column is `proj_project` NOT `proj_name`
-- **KEY RULE:** Project primary key is `proj_id` NOT `id`
+## Source Tables — Current State ✅
+- `npis_projects` — **41,003 rows** (complete dataset 2017–Apr 13, 2026)
+- `npis_companies` — **36,695 rows**
+- `npis_refer` — **50,845 rows**
+- PRIMARY KEY on `npis_projects(proj_id)` ✅
+- PRIMARY KEY on `npis_companies(comp_id)` ✅
+- Dashboard stat card shows: **40,948 projects, 43 states, 21 industries, last updated 13 Apr 2026**
+- **3 days of data (Apr 14–16) pending manual entry via CRUD screen (TO BUILD)**
+
+**KEY RULES:**
+- `proj_industry` = primary sector (NOT proj_sector)
+- `proj_project` = project name (NOT proj_name)
+- `proj_id` = primary key (NOT id)
 
 ---
 
-## Data Import — Current Status
+## NEXT PRIORITY — Admin CRUD Screen
 
-### What happened
-- Batch 0 (Jan 2024–Dec 2025) was pre-loaded — 6,511 projects
-- Batch 1 (Jan 2023–Dec 2024) was imported today — caused overlap and duplicates
-- Root cause: npis_projects had no PRIMARY KEY, so INSERT IGNORE did not prevent duplicates
-- Decision: wipe all three tables and start fresh with one complete export
+**File to build:** `/dashboard/admin/crud.php`
 
-### What to do next
-Ask DBA to export **complete dataset — all years 2017 to April 2026 — in one single export**. No year splitting. Three files: `npis_projects.sql`, `npis_companies.sql`, `npis_refer.sql`. Upload to Claude, clean, import once.
+This is the daily data entry screen for researchers. Replaces all manual SQL workflows. Every day after the platform launches, researchers use this screen to enter new projects, update existing ones, and connect companies.
 
-### Import command (use for all imports)
-```bash
-mysql -u newp_npt_ai_user -p'npt_ai_user@123' newp_ai_engine --default-character-set=utf8mb4 < /home/newprojectstracker.in/public_html/dumps/filename.sql 2>&1 | tail -5
+---
+
+### Researcher Workflow — Three Cases
+
+When a researcher has a new project lead, they first search existing projects by company name and industry:
+
+**Case 1 — Same project, old entry, updates now available**
+Edit the existing entry. Record all changes. Save.
+- `proj_takendate` stays unchanged
+- `proj_updateddate` = today
+
+**Case 2 — Same project, taken recently**
+Skip. No action.
+
+**Case 3 — New project**
+Create new entry. All three tables written: npis_projects + npis_companies (if new) + npis_refer.
+- `proj_takendate` = today
+- `proj_updateddate` = today
+
+---
+
+### Full New Entry Flow
+
+```
+1. Search existing projects (company name + industry)
+       ↓
+   No match found
+       ↓
+2. Fill project details form (manual + AI-assisted)
+       ↓
+3. Click "Connect Company"
+       ↓
+4. Search companies DB by name
+       ├── Found → Select → Auto-connects
+       └── Not found → "Add New Company" mini-form
+                            ↓
+                       Save new company
+                            ↓
+                       Auto-connects to current project
+       ↓
+5. Save project
+       ↓
+   Writes: npis_projects + npis_refer (+ npis_companies if new)
+       ↓
+6. Entry complete ✅
 ```
 
-### Import order (always)
-1. npis_companies_clean.sql
-2. npis_projects_clean.sql
-3. npis_refer_clean.sql
+---
 
-### After import — verify counts
-```bash
-mysql -u newp_npt_ai_user -p'npt_ai_user@123' newp_ai_engine -e "
-SELECT COUNT(*) as projects FROM npis_projects;
-SELECT COUNT(*) as companies FROM npis_companies;
-SELECT COUNT(*) as refer FROM npis_refer;
-"
-```
+### Auto-generation Rules
 
-### After import — delete dump files immediately
-```bash
-rm /home/newprojectstracker.in/public_html/dumps/npis_companies_clean.sql
-rm /home/newprojectstracker.in/public_html/dumps/npis_projects_clean.sql
-rm /home/newprojectstracker.in/public_html/dumps/npis_refer_clean.sql
-```
+**proj_id:** AUTO_INCREMENT (PRIMARY KEY already set)
 
-**See DATA_IMPORT_GUIDE.md for full error solutions and cleaning process.**
+**proj_slug:** `{project-name-sanitized}-in-{district}-{proj_pkey_lowercase}`
+Example: `new-steel-plant-in-vizag-pvv12345`
+
+**proj_pkey:** `P` + first 2 letters of industry code + first letter of state + sequential number
+Example: `PVV12345`
+
+**proj_costrange:** Auto-calculated from proj_cost:
+- < 100M → `Less than 100 Million`
+- 100–999M → `From 100 Million to 999 Million`
+- 1000–4999M → `From 1000 Million to 4999 Million`
+- 5000–9999M → `From 5000 Million to 9999 Million`
+- 10000–49999M → `From 10000 Million to 49999 Million`
+- ≥ 50000M → `More than 49999 Million`
+
+**comp_id:** AUTO_INCREMENT
+
+**comp_slug:** Company name sanitized, lowercase, hyphenated
+
+**comp_pkey:** `C` + first letter of company + first letter of city + sequential number
+
+**ref_ID:** AUTO_INCREMENT
+
+**ref_comptype:** `Promoter` (for primary company connection)
+
+**ref_primary:** `YES` (for primary company connection)
+
+---
+
+### Project Fields
+
+| Field | Source | Notes |
+|-------|--------|-------|
+| proj_id | Auto | PRIMARY KEY |
+| proj_slug | Auto | name + district + pkey |
+| proj_pkey | Auto | P + codes |
+| proj_company | From refer | Pulled from connected company name |
+| proj_cin | Manual | Optional |
+| proj_project | Manual | Full project name |
+| proj_synopsis | Manual/AI | One-line description |
+| proj_teaser | Manual/AI | Short paragraph |
+| proj_endproduct | Manual | Product/output |
+| proj_equipments | Manual | Key equipment |
+| proj_type | Dropdown | New / Expansion / Modernisation |
+| proj_ownership | Dropdown | Private / Central PSU / State PSU / Government |
+| proj_industry | Dropdown | Primary industry sector |
+| proj_cost | Manual | Investment in millions (numeric) |
+| proj_costrange | Auto | Calculated from proj_cost |
+| proj_prodcap | Manual | Production capacity |
+| proj_cod | Manual | Expected completion |
+| proj_location | Manual | Village/area |
+| proj_district | Manual | District |
+| proj_state | Dropdown | State |
+| proj_stage | Dropdown | Project stage |
+| proj_details | Manual/AI | Full description |
+| proj_source | Manual | Source of information |
+| proj_reftags | Manual | Company name (for search indexing) |
+| proj_takendate | Auto | First entry date — never changes on edit |
+| proj_updateddate | Auto | Today on every save |
+| proj_recently_viewed | Auto | Today on save |
+| proj_show | Default | YES |
+| proj_taken_by | Auto | Logged-in researcher name |
+
+---
+
+### Company Fields (for new company entry)
+
+| Field | Source | Notes |
+|-------|--------|-------|
+| comp_id | Auto | PRIMARY KEY |
+| comp_slug | Auto | From name |
+| comp_pkey | Auto | C + letters + number |
+| comp_company | Manual | Full company name |
+| comp_address1 | Manual | Address line 1 |
+| comp_address2 | Manual | Address line 2 |
+| comp_city | Manual | City |
+| comp_pincode | Manual | PIN |
+| comp_state | Dropdown | State |
+| comp_reftags | Auto | Company name |
+| comp_takendate | Auto | Today |
+| comp_updateddate | Auto | Today |
+| comp_takenby | Auto | Logged-in user |
+
+---
+
+### Refer Entry (auto-created on connect)
+
+| Field | Value |
+|-------|-------|
+| ref_ID | AUTO_INCREMENT |
+| ref_compid | comp_id of connected company |
+| ref_projid | proj_id of current project |
+| ref_projfk | proj_pkey of current project |
+| ref_compfk | comp_pkey of connected company |
+| ref_comptype | Promoter |
+| ref_primary | YES |
+
+---
+
+### CRUD Screen UI Plan
+
+**Page:** `/dashboard/admin/crud.php`
+
+**Section 1 — Search Panel (top)**
+- Search bar: keyword / company name
+- Industry dropdown filter
+- Results table: proj_id, name, company, state, stage, last updated
+- Per-row buttons: Edit | Skip
+
+**Section 2 — Project Entry Form**
+- All project fields
+- "AI Populate" button — sends synopsis to Anthropic API → fills proj_details
+- "Connect Company" button — triggers company search modal
+
+**Section 3 — Company Search Modal (overlay)**
+- Text search input
+- Results list from npis_companies (live search)
+- "Select" button per result → closes modal, connects company
+- "Add New Company" button → expands mini-form inline
+  - Fields: name, address1, address2, city, state, pincode
+  - "Save & Connect" → saves company, connects, closes modal
+
+**Section 4 — Save Bar (sticky bottom)**
+- "Save as New" button (Case 3)
+- "Save Update" button (Case 1)
+- Validation before save
+- On success: redirect to view of saved project
 
 ---
 
@@ -73,9 +223,9 @@ rm /home/newprojectstracker.in/public_html/dumps/npis_refer_clean.sql
 - `npt_users` — registered users
 - `npt_waitlist` — waitlist captures
 - `npt_password_resets` — reset tokens
-- `npt_briefcase` — saved projects (user_id, proj_id, saved_at)
-- `npt_watchlist_phrases` — user watch phrases (max 5 per user)
-- `npt_watchlist_projects` — matched projects per user (max 50 per user)
+- `npt_briefcase` — saved projects
+- `npt_watchlist_phrases` — user watch phrases (max 5)
+- `npt_watchlist_projects` — matched projects (max 50)
 
 ---
 
@@ -84,19 +234,9 @@ id, email, username, password_hash, full_name, company, designation, phone,
 plan_type (free/basic/premium), plan_status (active/expired/suspended),
 plan_start, plan_end, credits_monthly, credits_used, credits_reset_date,
 daily_limit, daily_used, daily_reset, weekly_limit, weekly_used, weekly_reset,
-**state_access** (VARCHAR 500, default 'all'),
-**industry_access** (VARCHAR 500, default 'all'),
+state_access (VARCHAR 500, default 'all'),
+industry_access (VARCHAR 500, default 'all'),
 source, imported_from_npt, email_verified, created_at, last_login
-
----
-
-## npt_watchlist_phrases Schema
-id, user_id, phrase (VARCHAR 255), phrase_type (ENUM: keyword/company/industry/state), created_at
-
-## npt_watchlist_projects Schema
-id, user_id, proj_id, matched_phrase (VARCHAR 255), matched_at, is_new (TINYINT, default 1)
-- UNIQUE KEY on (user_id, proj_id)
-- is_new = 1 until user visits watchlist page (powers sidebar badge)
 
 ---
 
@@ -112,25 +252,18 @@ id, user_id, proj_id, matched_phrase (VARCHAR 255), matched_at, is_new (TINYINT,
 
 ## Admin Panel
 - **URL:** /dashboard/admin/
-- **Allowed admins:** icarusprakash@gmail.com, sbirumca85@gmail.com
-- **Files:** /dashboard/admin/index.php, /dashboard/admin/user.php
-
-### Admin index.php features:
-- Stat cards, user table, search + plan filter, quick actions
-
-### Admin user.php features:
-- 3 tabs: Activity | Subscription Controls | Access Controls
-- State + industry access controls with checkbox grid
-- Single save updates all fields
+- **Allowed:** icarusprakash@gmail.com, sbirumca85@gmail.com
+- **Built:** admin/index.php, admin/user.php
+- **To build:** admin/crud.php
 
 ---
 
 ## Credit System
-| Plan    | Monthly | Daily | Weekly |
-|---------|---------|-------|--------|
-| Free    | 5       | —     | —      |
-| Basic   | 400     | 30    | 100    |
-| Premium | 10,000  | 50    | 600    |
+| Plan | Monthly | Daily | Weekly |
+|------|---------|-------|--------|
+| Free | 5 | — | — |
+| Basic | 400 | 30 | 100 |
+| Premium | 10,000 | 50 | 600 |
 
 ---
 
@@ -139,54 +272,22 @@ id, user_id, proj_id, matched_phrase (VARCHAR 255), matched_at, is_new (TINYINT,
 | File | Status | Notes |
 |------|--------|-------|
 | _auth.php | ✅ | Auth guard |
-| _layout.php | ✅ | Sidebar + topbar. Watchlist nav item + badge. |
-| _layout_end.php | ✅ | Closes dashboard body |
-| index.php | ✅ | Stat cards + recent projects |
-| projects.php | ✅ | Search + filters + pagination. Enforces state_access + industry_access. |
-| project.php | ✅ | 4 tabs. Credit gate. Restriction modal. |
+| _layout.php | ✅ | Sidebar + topbar + watchlist badge |
+| _layout_end.php | ✅ | Closes body |
+| index.php | ✅ | Stat cards + recent projects. 2017–2026 label. |
+| projects.php | ✅ | Search + filters + pagination + access controls |
+| project.php | ✅ | 4 tabs, credit gate, restriction modal |
 | companies.php | ✅ | Card grid, search, state filter |
-| company.php | ✅ | Company profile + associated projects |
-| briefcase.php | ✅ | Saved projects with AJAX remove |
-| briefcase_toggle.php | ✅ | AJAX save/unsave handler |
+| company.php | ✅ | Company profile + projects |
+| briefcase.php | ✅ | Saved projects |
+| briefcase_toggle.php | ✅ | AJAX handler |
 | watchlist.php | ✅ | Phrase manager + matched projects |
-| usage.php | ✅ | Monthly/daily/weekly usage stats |
-| profile.php | ✅ | Edit profile, change password |
-| pricing.php | ✅ | Plans & pricing (needs layout refactor) |
-| admin/index.php | ✅ | User list, stat cards, quick actions |
-| admin/user.php | ✅ | Full user control panel with access controls |
-
----
-
-## Watchlist Feature
-- Max 5 watch phrases per user (all plan types)
-- Industry + State use autocomplete; Keyword + Company are free text
-- Forward-only matching — no retroactive search on existing data
-- Matching logic fires when new projects added via daily CRUD (TO BUILD)
-- Max 50 projects per watchlist, shows 5 most recent
-- Sidebar badge shows new match count (clears on visit)
-
----
-
-## Access Controls
-- `state_access` and `industry_access` columns in `npt_users`
-- `all` = no restriction; `gujarat,maharashtra` = comma-separated list
-- Enforced in projects.php (hard WHERE clause) and project.php (restriction modal)
-- Admin can set per user via admin/user.php
-
----
-
-## Public Pages — REVISED SCOPE
-- No individual project detail pages publicly
-- Phase 3: company listing pages + product tag pages only
-- Parked: states_slug.php, projects_slug.php (scrapped), companies_slug.php
-
----
-
-## Razorpay Payment Integration — PENDING
-- Domain verified ✅
-- Key ID: rzp_live_D1cUKmkOav2Xx9
-- Key Secret: pending — Jp to coordinate with Shopify vendor to regenerate safely
-- Build plan ready: create_order.php → pricing.php checkout → payment_verify.php → webhook
+| usage.php | ✅ | Usage stats |
+| profile.php | ✅ | Edit profile + password |
+| pricing.php | ✅ | Plans (needs layout refactor) |
+| admin/index.php | ✅ | User list + stat cards |
+| admin/user.php | ✅ | Full user control panel |
+| **admin/crud.php** | 🔲 | **NEXT — Daily project + company entry** |
 
 ---
 
@@ -194,33 +295,29 @@ id, user_id, proj_id, matched_phrase (VARCHAR 255), matched_at, is_new (TINYINT,
 
 | # | Task | Notes |
 |---|------|-------|
-| 1 | **Full data import** | DBA to export complete 2017–Apr 2026 dataset in one shot. Upload to Claude → clean → import. |
-| 2 | **Staff testing** | Revathi + Sbiru to test access controls. Report bugs. |
-| 3 | **Daily projects CRUD** | Admin form to add projects. Triggers watchlist matching. |
-| 4 | **Razorpay keys** | Jp to sort with Shopify vendor. |
-| 5 | **Razorpay payment integration** | Once keys available |
-| 6 | **login.php** | Set credits_reset_date on registration |
-| 7 | **Email verification** | Send on register via AWS SES |
-| 8 | **Pricing.php** | Refactor to shared _layout.php |
-| 9 | **Public pages Phase 3** | Company + product tag pages |
-| 10 | **Dashboard home enrichment** | News feed, recently added companies |
+| 1 | **admin/crud.php** | Full spec above. Build search + entry + company connect + save. |
+| 2 | **Enter Apr 14–16 backlog** | 3 days of projects via CRUD once built |
+| 3 | **Watchlist trigger in CRUD** | On new project save, fire watchlist phrase matching |
+| 4 | **Staff testing** | Revathi + Sbiru test access controls |
+| 5 | **Razorpay keys** | Jp to sort with Shopify vendor |
+| 6 | **Razorpay integration** | create_order → verify → webhook |
+| 7 | **login.php** | Set credits_reset_date on registration |
+| 8 | **Email verification** | AWS SES |
+| 9 | **pricing.php** | Refactor to _layout.php |
+| 10 | **Public pages Phase 3** | Company + product tag pages |
 
 ---
 
 ## Design System (Locked)
 - Navy: #1a3c6e, Orange: #e87722, Gray BG: #f5f7fa
 - Fonts: DM Serif Display (headings) + DM Sans (body)
-- Base font size: 16px in dashboard
 
 ---
 
-## Sidebar Nav Structure
-```
-MAIN:         Dashboard, Projects (Soon), Companies (Soon), Briefcase (Soon), Watchlist
-INTELLIGENCE: News Feed (Soon), Analytics (Soon)
-ACCOUNT:      My Profile (Soon), Plans & Pricing
-Premium only: AI Apps, Workspaces
-```
+## Razorpay — PENDING
+- Domain verified ✅
+- Key ID: rzp_live_D1cUKmkOav2Xx9
+- Key Secret: pending (Jp to get from Shopify vendor)
 
 ---
 
@@ -228,22 +325,23 @@ Premium only: AI Apps, Workspaces
 
 | Day | Date | Key Deliverables |
 |-----|------|-----------------|
-| 1 | Early Apr | Placeholder page deployed |
+| 1 | Early Apr | Placeholder deployed |
 | 2 | Early Apr | Waitlist landing page live |
 | 3–8 | Apr | Full dashboard built |
-| 9 | 14 Apr AM | Fixed admin panel. Built admin/user.php. State/industry access controls. Test briefs. |
-| 10 | 14 Apr PM | Access controls enforced. Watchlist feature built. Razorpay domain verified. |
-| 11 | 15 Apr AM | Data import pipeline built. Cleaning script written. Import attempted — discovered no PRIMARY KEY on npis_projects causing duplicates. Tables wiped. PRIMARY KEYs added on proj_id and comp_id. DBA to re-export complete dataset (2017–Apr 2026) as one single file. |
+| 9 | 14 Apr AM | Admin panel, access controls, test users |
+| 10 | 14 Apr PM | Access controls enforced, watchlist built, Razorpay domain verified |
+| 11 | 15 Apr AM | Import pipeline built, PRIMARY KEY issue found, tables wiped, keys added |
+| 12 | 16 Apr | Full dataset 2017–Apr 2026 imported. 41,003 projects, 36,695 companies, 50,845 refer. Dashboard live. CRUD spec locked. |
 
 ---
 
 ## Key Rules (Non-Negotiable)
 - **newprojectstracker.com: NEVER TOUCH**
-- Company names: ONLY visible on project.php. NEVER in listings.
-- `proj_industry` = primary sector field (NOT proj_sector)
-- `proj_project` = project name field (NOT proj_name)
+- Company names: ONLY on project.php, never in listings
+- `proj_industry` = primary sector (NOT proj_sector)
+- `proj_project` = project name (NOT proj_name)
 - `proj_id` = primary key (NOT id)
 - No public project detail pages
-- Delete SQL dump files from server immediately after import
-- Always verify PRIMARY KEY exists before importing: `SHOW KEYS FROM npis_projects WHERE Key_name = 'PRIMARY';`
-- Never split exports by year — always import complete dataset in one shot
+- Delete SQL dumps immediately after import
+- Always verify PRIMARY KEY before importing
+- Never split exports by year
