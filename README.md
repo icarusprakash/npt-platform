@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 16 April 2026 (Day 12 — Session End)**
+**Last Updated: 17 April 2026 (Day 13)**
 
 ---
 
@@ -11,306 +11,198 @@
 - **DB:** newp_ai_engine
 - **DB User:** newp_npt_ai_user / npt_ai_user@123
 - **GitHub:** https://github.com/icarusprakash/npt-ai-engine
-- **All dashboard files:** /home/newprojectstracker.in/public_html/dashboard/
 
 ---
 
-## Source Tables — Current State ✅
-- `npis_projects` — **41,003 rows** (complete dataset 2017–Apr 13, 2026)
-- `npis_companies` — **36,695 rows**
-- `npis_refer` — **50,845 rows**
-- PRIMARY KEY on `npis_projects(proj_id)` ✅
-- PRIMARY KEY on `npis_companies(comp_id)` ✅
-- Dashboard stat card shows: **40,948 projects, 43 states, 21 industries, last updated 13 Apr 2026**
-- **3 days of data (Apr 14–16) pending manual entry via CRUD screen (TO BUILD)**
+## Two Separate Systems — Same Database
 
-**KEY RULES:**
-- `proj_industry` = primary sector (NOT proj_sector)
-- `proj_project` = project name (NOT proj_name)
-- `proj_id` = primary key (NOT id)
+### Subscriber Dashboard
+- **URL:** newprojectstracker.in/dashboard/
+- **Files:** /home/newprojectstracker.in/public_html/dashboard/
+- **Users:** npt_users table
+- **Session namespace:** npt_user_*
+- **Purpose:** Paid subscribers browse projects
 
----
+### Admin Panel
+- **URL:** newprojectstracker.in/admin/
+- **Files:** /home/newprojectstracker.in/public_html/admin/
+- **Users:** npt_admin_users table (completely separate)
+- **Session namespace:** npt_admin_*
+- **Purpose:** Researchers enter/edit projects daily
 
-## NEXT PRIORITY — Admin CRUD Screen
-
-**File to build:** `/dashboard/admin/crud.php`
-
-This is the daily data entry screen for researchers. Replaces all manual SQL workflows. Every day after the platform launches, researchers use this screen to enter new projects, update existing ones, and connect companies.
+Both systems share the same `newp_ai_engine` database. Admin writes, subscribers read.
 
 ---
 
-### Researcher Workflow — Three Cases
+## Admin Panel — Files
 
-When a researcher has a new project lead, they first search existing projects by company name and industry:
-
-**Case 1 — Same project, old entry, updates now available**
-Edit the existing entry. Record all changes. Save.
-- `proj_takendate` stays unchanged
-- `proj_updateddate` = today
-
-**Case 2 — Same project, taken recently**
-Skip. No action.
-
-**Case 3 — New project**
-Create new entry. All three tables written: npis_projects + npis_companies (if new) + npis_refer.
-- `proj_takendate` = today
-- `proj_updateddate` = today
+| File | Purpose |
+|------|---------|
+| login.php | Admin login (dark theme) |
+| _auth.php | Admin auth guard |
+| _layout.php | Admin sidebar + topbar (dark navy + red accent) |
+| _layout_end.php | Closes layout |
+| index.php | Dashboard — draft queue, published, stats |
+| projects.php | All projects list with filters + pagination |
+| project.php | **Project view page with Quick Edit** |
+| crud.php | Full project entry / edit form |
+| crud_save.php | Save handler (new + edit) |
+| crud_search.php | AJAX project search |
+| crud_company_search.php | AJAX company search |
+| crud_add_company.php | AJAX add new company |
+| qe_save.php | Quick Edit AJAX save handler |
+| qe_milestone.php | Add milestone AJAX handler |
+| publish.php | Quick publish handler |
+| unpublish.php | Quick unpublish handler |
+| logout.php | Admin logout |
 
 ---
 
-### Full New Entry Flow
+## Admin Users (npt_admin_users table)
+
+| Email | Name | Role | Password |
+|-------|------|------|---------|
+| icarusprakash@gmail.com | Jayaprakash | superadmin | (set) |
+| indscan.projects@gmail.com | Indscan Admin | superadmin | (set) |
+| sbirumca85@gmail.com | Sbiru | editor | NPTEditor2026! |
+
+---
+
+## Project Workflow (Daily)
 
 ```
-1. Search existing projects (company name + industry)
-       ↓
-   No match found
-       ↓
-2. Fill project details form (manual + AI-assisted)
-       ↓
-3. Click "Connect Company"
-       ↓
-4. Search companies DB by name
-       ├── Found → Select → Auto-connects
-       └── Not found → "Add New Company" mini-form
-                            ↓
-                       Save new company
-                            ↓
-                       Auto-connects to current project
-       ↓
-5. Save project
-       ↓
-   Writes: npis_projects + npis_refer (+ npis_companies if new)
-       ↓
-6. Entry complete ✅
+Researcher → crud.php (search first)
+    ↓
+Case 1: Found, old entry with updates → Edit → Save (takendate preserved)
+Case 2: Found, recent duplicate → Skip
+Case 3: Not found → New entry → Connect company → Save
+    ↓
+project.php (view page)
+    ↓
+Reviewer → Publish Now button
+    ↓
+Visible to subscribers
 ```
 
 ---
 
-### Auto-generation Rules
+## Project Status Flow
+- **Draft** (proj_show = 'NO') — researcher saved, not visible
+- **Published** (proj_show = 'YES') — reviewer approved, visible to subscribers
+- **proj_publish_date** — can be past or future date
 
-**proj_id:** AUTO_INCREMENT (PRIMARY KEY already set)
+---
 
-**proj_slug:** `{project-name-sanitized}-in-{district}-{proj_pkey_lowercase}`
-Example: `new-steel-plant-in-vizag-pvv12345`
+## New Fields Added to npis_projects
 
-**proj_pkey:** `P` + first 2 letters of industry code + first letter of state + sequential number
-Example: `PVV12345`
+| Field | Type | Purpose |
+|-------|------|---------|
+| proj_tags | TEXT | Product tags (comma separated) |
+| proj_milestones | TEXT | JSON array of {date, event} milestone history |
+| proj_source_tags | TEXT | Source classification tags (comma separated) |
+| proj_publish_date | DATE | When project goes live (past or future) |
+
+### npt_source_tags table
+Master list of source tags for autocomplete.
+Columns: id, tag_name, tag_slug, usage_count, created_at
+
+### proj_milestones JSON format
+```json
+[
+  {"date": "2025-06-15", "event": "Financial closure achieved"},
+  {"date": "2026-04-13", "event": "Trial run commenced"}
+]
+```
+Sorted by date ascending. Never overwrites — always appends.
+
+---
+
+## Auto-generation Rules
+
+**proj_pkey:** `P` + comp_pkey[1] + comp_pkey[1] + proj_id
+Example: Company pkey `CDA1` → proj_pkey `PDD41004`
+
+**proj_slug:** sanitized(proj_project + ' in ' + proj_district + ' ' + proj_pkey_lowercase)
+
+**comp_pkey:** `C` + company[0] + city[0] + comp_id
+
+**comp_slug:** sanitized company name
 
 **proj_costrange:** Auto-calculated from proj_cost:
-- < 100M → `Less than 100 Million`
-- 100–999M → `From 100 Million to 999 Million`
-- 1000–4999M → `From 1000 Million to 4999 Million`
-- 5000–9999M → `From 5000 Million to 9999 Million`
-- 10000–49999M → `From 10000 Million to 49999 Million`
-- ≥ 50000M → `More than 49999 Million`
-
-**comp_id:** AUTO_INCREMENT
-
-**comp_slug:** Company name sanitized, lowercase, hyphenated
-
-**comp_pkey:** `C` + first letter of company + first letter of city + sequential number
-
-**ref_ID:** AUTO_INCREMENT
-
-**ref_comptype:** `Promoter` (for primary company connection)
-
-**ref_primary:** `YES` (for primary company connection)
+- < 100M → Less than 100 Million
+- 100–999M → From 100 Million to 999 Million
+- 1000–4999M → From 1000 Million to 4999 Million
+- 5000–9999M → From 5000 Million to 9999 Million
+- 10000–49999M → From 10000 Million to 49999 Million
+- ≥ 50000M → More than 49999 Million
 
 ---
 
-### Project Fields
+## Source Tables — Current State
+- `npis_projects` — **41,003 rows** (2017–Apr 13, 2026)
+- `npis_companies` — **36,695 rows**
+- `npis_refer` — **50,845 rows**
+- PRIMARY KEY on proj_id and comp_id ✅
+- **3 days pending entry (Apr 14–16) via crud.php**
 
-| Field | Source | Notes |
-|-------|--------|-------|
-| proj_id | Auto | PRIMARY KEY |
-| proj_slug | Auto | name + district + pkey |
-| proj_pkey | Auto | P + codes |
-| proj_company | From refer | Pulled from connected company name |
-| proj_cin | Manual | Optional |
-| proj_project | Manual | Full project name |
-| proj_synopsis | Manual/AI | One-line description |
-| proj_teaser | Manual/AI | Short paragraph |
-| proj_endproduct | Manual | Product/output |
-| proj_equipments | Manual | Key equipment |
-| proj_type | Dropdown | New / Expansion / Modernisation |
-| proj_ownership | Dropdown | Private / Central PSU / State PSU / Government |
-| proj_industry | Dropdown | Primary industry sector |
-| proj_cost | Manual | Investment in millions (numeric) |
-| proj_costrange | Auto | Calculated from proj_cost |
-| proj_prodcap | Manual | Production capacity |
-| proj_cod | Manual | Expected completion |
-| proj_location | Manual | Village/area |
-| proj_district | Manual | District |
-| proj_state | Dropdown | State |
-| proj_stage | Dropdown | Project stage |
-| proj_details | Manual/AI | Full description |
-| proj_source | Manual | Source of information |
-| proj_reftags | Manual | Company name (for search indexing) |
-| proj_takendate | Auto | First entry date — never changes on edit |
-| proj_updateddate | Auto | Today on every save |
-| proj_recently_viewed | Auto | Today on save |
-| proj_show | Default | YES |
-| proj_taken_by | Auto | Logged-in researcher name |
+**KEY RULES:**
+- `proj_industry` NOT `proj_sector`
+- `proj_project` NOT `proj_name`
+- `proj_id` NOT `id`
 
 ---
 
-### Company Fields (for new company entry)
+## Subscriber Dashboard — Files
+- **Files:** /home/newprojectstracker.in/public_html/dashboard/
+- **Admin subfolder:** dashboard/admin/ — only index.php + user.php remain (subscriber user management)
 
-| Field | Source | Notes |
-|-------|--------|-------|
-| comp_id | Auto | PRIMARY KEY |
-| comp_slug | Auto | From name |
-| comp_pkey | Auto | C + letters + number |
-| comp_company | Manual | Full company name |
-| comp_address1 | Manual | Address line 1 |
-| comp_address2 | Manual | Address line 2 |
-| comp_city | Manual | City |
-| comp_pincode | Manual | PIN |
-| comp_state | Dropdown | State |
-| comp_reftags | Auto | Company name |
-| comp_takendate | Auto | Today |
-| comp_updateddate | Auto | Today |
-| comp_takenby | Auto | Logged-in user |
+### Dashboard Pages Status
 
----
-
-### Refer Entry (auto-created on connect)
-
-| Field | Value |
-|-------|-------|
-| ref_ID | AUTO_INCREMENT |
-| ref_compid | comp_id of connected company |
-| ref_projid | proj_id of current project |
-| ref_projfk | proj_pkey of current project |
-| ref_compfk | comp_pkey of connected company |
-| ref_comptype | Promoter |
-| ref_primary | YES |
+| File | Status |
+|------|--------|
+| _auth.php | ✅ |
+| _layout.php | ✅ |
+| index.php | ✅ Stats + recent projects |
+| projects.php | ✅ Search + filters + access controls |
+| project.php | ✅ 4 tabs, credit gate |
+| companies.php | ✅ |
+| company.php | ✅ |
+| briefcase.php | ✅ |
+| watchlist.php | ✅ |
+| usage.php | ✅ |
+| profile.php | ✅ |
+| pricing.php | ✅ (needs layout refactor) |
+| admin/index.php | ✅ Subscriber user management |
+| admin/user.php | ✅ User control panel |
 
 ---
 
-### CRUD Screen UI Plan
+## Next Tasks (Priority Order)
 
-**Page:** `/dashboard/admin/crud.php`
-
-**Section 1 — Search Panel (top)**
-- Search bar: keyword / company name
-- Industry dropdown filter
-- Results table: proj_id, name, company, state, stage, last updated
-- Per-row buttons: Edit | Skip
-
-**Section 2 — Project Entry Form**
-- All project fields
-- "AI Populate" button — sends synopsis to Anthropic API → fills proj_details
-- "Connect Company" button — triggers company search modal
-
-**Section 3 — Company Search Modal (overlay)**
-- Text search input
-- Results list from npis_companies (live search)
-- "Select" button per result → closes modal, connects company
-- "Add New Company" button → expands mini-form inline
-  - Fields: name, address1, address2, city, state, pincode
-  - "Save & Connect" → saves company, connects, closes modal
-
-**Section 4 — Save Bar (sticky bottom)**
-- "Save as New" button (Case 3)
-- "Save Update" button (Case 1)
-- Validation before save
-- On success: redirect to view of saved project
+| # | Task |
+|---|------|
+| 1 | **Test CRUD end-to-end** — enter Apr 14–16 backlog via crud.php |
+| 2 | **Watchlist trigger** — fire matching when new project saved via crud_save.php |
+| 3 | **Staff training** — walk Sbiru + Revathi through admin workflow |
+| 4 | **Razorpay** — Jp to get new key pair from Shopify vendor |
+| 5 | **Razorpay integration** — create_order → verify → webhook |
+| 6 | **login.php** — set credits_reset_date on registration |
+| 7 | **Email verification** — AWS SES |
+| 8 | **pricing.php** — refactor to _layout.php |
+| 9 | **Public pages Phase 3** — company + product tag pages |
 
 ---
 
-## Platform Tables (npt_ prefix)
-- `npt_users` — registered users
-- `npt_waitlist` — waitlist captures
-- `npt_password_resets` — reset tokens
-- `npt_briefcase` — saved projects
-- `npt_watchlist_phrases` — user watch phrases (max 5)
-- `npt_watchlist_projects` — matched projects (max 50)
+## Design Systems
 
----
+### Admin Panel (dark)
+- Sidebar: #1a1a2e (very dark navy)
+- Accent: #e94560 (red)
+- Background: #f0f2f5
 
-## npt_users Schema
-id, email, username, password_hash, full_name, company, designation, phone,
-plan_type (free/basic/premium), plan_status (active/expired/suspended),
-plan_start, plan_end, credits_monthly, credits_used, credits_reset_date,
-daily_limit, daily_used, daily_reset, weekly_limit, weekly_used, weekly_reset,
-state_access (VARCHAR 500, default 'all'),
-industry_access (VARCHAR 500, default 'all'),
-source, imported_from_npt, email_verified, created_at, last_login
-
----
-
-## Test Users
-| Email | Role | Password | Plan |
-|-------|------|----------|------|
-| icarusprakash@gmail.com | Super Admin | (existing) | Basic, 1000 credits |
-| sbirumca85@gmail.com | Admin Manager | NPTAdmin@2026 | Basic, 1000 credits |
-| revathid883@gmail.com | Test Subscriber | (existing) | Basic |
-| kavi.santhi@gmail.com | Test Free User | (existing) | Free |
-
----
-
-## Admin Panel
-- **URL:** /dashboard/admin/
-- **Allowed:** icarusprakash@gmail.com, sbirumca85@gmail.com
-- **Built:** admin/index.php, admin/user.php
-- **To build:** admin/crud.php
-
----
-
-## Credit System
-| Plan | Monthly | Daily | Weekly |
-|------|---------|-------|--------|
-| Free | 5 | — | — |
-| Basic | 400 | 30 | 100 |
-| Premium | 10,000 | 50 | 600 |
-
----
-
-## Dashboard Pages — Status
-
-| File | Status | Notes |
-|------|--------|-------|
-| _auth.php | ✅ | Auth guard |
-| _layout.php | ✅ | Sidebar + topbar + watchlist badge |
-| _layout_end.php | ✅ | Closes body |
-| index.php | ✅ | Stat cards + recent projects. 2017–2026 label. |
-| projects.php | ✅ | Search + filters + pagination + access controls |
-| project.php | ✅ | 4 tabs, credit gate, restriction modal |
-| companies.php | ✅ | Card grid, search, state filter |
-| company.php | ✅ | Company profile + projects |
-| briefcase.php | ✅ | Saved projects |
-| briefcase_toggle.php | ✅ | AJAX handler |
-| watchlist.php | ✅ | Phrase manager + matched projects |
-| usage.php | ✅ | Usage stats |
-| profile.php | ✅ | Edit profile + password |
-| pricing.php | ✅ | Plans (needs layout refactor) |
-| admin/index.php | ✅ | User list + stat cards |
-| admin/user.php | ✅ | Full user control panel |
-| **admin/crud.php** | 🔲 | **NEXT — Daily project + company entry** |
-
----
-
-## Next Tasks (In Priority Order)
-
-| # | Task | Notes |
-|---|------|-------|
-| 1 | **admin/crud.php** | Full spec above. Build search + entry + company connect + save. |
-| 2 | **Enter Apr 14–16 backlog** | 3 days of projects via CRUD once built |
-| 3 | **Watchlist trigger in CRUD** | On new project save, fire watchlist phrase matching |
-| 4 | **Staff testing** | Revathi + Sbiru test access controls |
-| 5 | **Razorpay keys** | Jp to sort with Shopify vendor |
-| 6 | **Razorpay integration** | create_order → verify → webhook |
-| 7 | **login.php** | Set credits_reset_date on registration |
-| 8 | **Email verification** | AWS SES |
-| 9 | **pricing.php** | Refactor to _layout.php |
-| 10 | **Public pages Phase 3** | Company + product tag pages |
-
----
-
-## Design System (Locked)
+### Subscriber Dashboard
 - Navy: #1a3c6e, Orange: #e87722, Gray BG: #f5f7fa
-- Fonts: DM Serif Display (headings) + DM Sans (body)
+- Fonts: DM Serif Display + DM Sans
 
 ---
 
@@ -325,23 +217,20 @@ source, imported_from_npt, email_verified, created_at, last_login
 
 | Day | Date | Key Deliverables |
 |-----|------|-----------------|
-| 1 | Early Apr | Placeholder deployed |
-| 2 | Early Apr | Waitlist landing page live |
-| 3–8 | Apr | Full dashboard built |
-| 9 | 14 Apr AM | Admin panel, access controls, test users |
-| 10 | 14 Apr PM | Access controls enforced, watchlist built, Razorpay domain verified |
-| 11 | 15 Apr AM | Import pipeline built, PRIMARY KEY issue found, tables wiped, keys added |
-| 12 | 16 Apr | Full dataset 2017–Apr 2026 imported. 41,003 projects, 36,695 companies, 50,845 refer. Dashboard live. CRUD spec locked. |
+| 1–2 | Early Apr | Placeholder + waitlist landing page |
+| 3–8 | Apr | Full subscriber dashboard built |
+| 9 | 14 Apr AM | Admin panel, access controls |
+| 10 | 14 Apr PM | Watchlist, Razorpay domain verified |
+| 11 | 15 Apr AM | Import pipeline, PRIMARY KEY fix |
+| 12 | 16 Apr | Full dataset imported (41,003 projects). CRUD spec locked. |
+| 13 | 17 Apr | Standalone admin panel built at /admin/. Login, dashboard, projects list, project view with Quick Edit, add/edit project form, milestone system, source tags. Completely separate from subscriber dashboard. |
 
 ---
 
-## Key Rules (Non-Negotiable)
+## Key Rules
 - **newprojectstracker.com: NEVER TOUCH**
-- Company names: ONLY on project.php, never in listings
-- `proj_industry` = primary sector (NOT proj_sector)
-- `proj_project` = project name (NOT proj_name)
-- `proj_id` = primary key (NOT id)
-- No public project detail pages
+- Admin panel: /admin/ — completely separate from /dashboard/
+- proj_industry = primary sector (NOT proj_sector)
+- proj_project = project name (NOT proj_name)
 - Delete SQL dumps immediately after import
 - Always verify PRIMARY KEY before importing
-- Never split exports by year
