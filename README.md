@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 17 April 2026 (Day 13)**
+**Last Updated: 18 April 2026 (Day 13 — Session End)**
 
 ---
 
@@ -16,80 +16,119 @@
 
 ## Two Separate Systems — Same Database
 
-### Subscriber Dashboard
+### NPT Subscriber Portal
 - **URL:** newprojectstracker.in/dashboard/
 - **Files:** /home/newprojectstracker.in/public_html/dashboard/
 - **Users:** npt_users table
-- **Session namespace:** npt_user_*
+- **Session:** npt_user_*
 - **Purpose:** Paid subscribers browse projects
 
-### Admin Panel
+### NPT Admin Portal
 - **URL:** newprojectstracker.in/admin/
 - **Files:** /home/newprojectstracker.in/public_html/admin/
 - **Users:** npt_admin_users table (completely separate)
-- **Session namespace:** npt_admin_*
+- **Session:** npt_admin_*
 - **Purpose:** Researchers enter/edit projects daily
 
-Both systems share the same `newp_ai_engine` database. Admin writes, subscribers read.
+Both share `newp_ai_engine` database. Admin writes, subscribers read.
 
 ---
 
-## Admin Panel — Files
+## NPT Admin Portal — All Files
 
 | File | Purpose |
 |------|---------|
 | login.php | Admin login (dark theme) |
 | _auth.php | Admin auth guard |
-| _layout.php | Admin sidebar + topbar (dark navy + red accent) |
+| _layout.php | Sidebar + topbar (dark navy + red accent) |
 | _layout_end.php | Closes layout |
-| index.php | Dashboard — draft queue, published, stats |
-| projects.php | All projects list with filters + pagination |
-| project.php | **Project view page with Quick Edit** |
+| index.php | Dashboard — draft queue, stats, today summary |
+| projects.php | All projects list — search, filter, paginate |
+| project.php | Project view with Quick Edit sections |
 | crud.php | Full project entry / edit form |
-| crud_save.php | Save handler (new + edit) |
+| crud_save.php | Save handler — new + edit |
 | crud_search.php | AJAX project search |
 | crud_company_search.php | AJAX company search |
-| crud_add_company.php | AJAX add new company |
-| qe_save.php | Quick Edit AJAX save handler |
-| qe_milestone.php | Add milestone AJAX handler |
-| publish.php | Quick publish handler |
-| unpublish.php | Quick unpublish handler |
+| crud_add_company.php | AJAX add new company inline |
+| qe_save.php | Quick Edit AJAX save |
+| qe_milestone.php | Add milestone AJAX |
+| repository.php | Researcher's working bucket |
+| daily.php | Today's 15 published projects + download + flush |
+| weekly.php | Week's accumulated projects + download + flush |
+| download.php | CSV/Excel download handler |
+| publish.php | Quick publish a project |
+| unpublish.php | Unpublish a project |
 | logout.php | Admin logout |
 
 ---
 
 ## Admin Users (npt_admin_users table)
 
-| Email | Name | Role | Password |
-|-------|------|------|---------|
-| icarusprakash@gmail.com | Jayaprakash | superadmin | (set) |
-| indscan.projects@gmail.com | Indscan Admin | superadmin | (set) |
-| sbirumca85@gmail.com | Sbiru | editor | NPTEditor2026! |
+| Email | Name | Role |
+|-------|------|------|
+| icarusprakash@gmail.com | Jayaprakash | superadmin |
+| indscan.projects@gmail.com | Indscan Admin | superadmin |
+| sbirumca85@gmail.com | Sbiru | editor |
 
 ---
 
-## Project Workflow (Daily)
+## Daily Workflow (Researcher)
 
 ```
-Researcher → crud.php (search first)
-    ↓
-Case 1: Found, old entry with updates → Edit → Save (takendate preserved)
-Case 2: Found, recent duplicate → Skip
-Case 3: Not found → New entry → Connect company → Save
-    ↓
-project.php (view page)
-    ↓
-Reviewer → Publish Now button
-    ↓
-Visible to subscribers
+Monday — Research lead provides source links
+
+Mon–Fri (daily):
+1. Researcher adds new projects via crud.php
+   → All new entries go to REPOSITORY (proj_repository = 'YES')
+2. At 3:30 PM — open Repository page
+3. Review entries, select 15 (spread across states/industries)
+4. Click "Move to Daily & Publish"
+   → proj_today = YES, proj_weekly = YES, proj_show = YES
+   → Projects visible to subscribers immediately
+
+Email Marketer (daily after 3:30 PM):
+5. Open Daily page → verify 15 entries
+6. Click "Download Excel" → raw data for PDF report + newsletter
+7. Create PDF report and newsletter (manual)
+8. Send to subscribers and prospects
+9. Click "Flush Daily" → clears daily section for tomorrow
+
+Friday:
+10. Open Weekly page → 75 entries accumulated
+11. Click "Download Weekly Excel"
+12. Format and send weekly report on Monday morning
+13. Click "Flush Weekly" → resets for next week
 ```
 
 ---
 
-## Project Status Flow
-- **Draft** (proj_show = 'NO') — researcher saved, not visible
-- **Published** (proj_show = 'YES') — reviewer approved, visible to subscribers
-- **proj_publish_date** — can be past or future date
+## Project Status Flags
+
+| Field | Value | Meaning |
+|-------|-------|---------|
+| proj_repository | YES | In researcher's bucket, not published |
+| proj_show | YES | Published, visible to subscribers |
+| proj_show | NO/NULL | Draft, not visible |
+| proj_today | YES | In today's daily section |
+| proj_weekly | YES | Accumulated in weekly section |
+| proj_publish_date | date | Can be past or future |
+
+---
+
+## Project Workflow (Three Cases)
+
+When researcher has a new project lead:
+
+**Case 1 — Existing project with updates**
+Search → find it → Edit → update fields → Save
+`proj_takendate` unchanged, `proj_updateddate` = today
+
+**Case 2 — Recent duplicate**
+Search → found recently → Skip
+
+**Case 3 — New project**
+Search → not found → Add New Entry → Connect Company → Save
+Goes to Repository → reviewed → published
 
 ---
 
@@ -98,13 +137,9 @@ Visible to subscribers
 | Field | Type | Purpose |
 |-------|------|---------|
 | proj_tags | TEXT | Product tags (comma separated) |
-| proj_milestones | TEXT | JSON array of {date, event} milestone history |
-| proj_source_tags | TEXT | Source classification tags (comma separated) |
-| proj_publish_date | DATE | When project goes live (past or future) |
-
-### npt_source_tags table
-Master list of source tags for autocomplete.
-Columns: id, tag_name, tag_slug, usage_count, created_at
+| proj_milestones | TEXT | JSON array — milestone history |
+| proj_source_tags | TEXT | Source classification tags |
+| proj_publish_date | DATE | Go-live date (past or future) |
 
 ### proj_milestones JSON format
 ```json
@@ -113,22 +148,23 @@ Columns: id, tag_name, tag_slug, usage_count, created_at
   {"date": "2026-04-13", "event": "Trial run commenced"}
 ]
 ```
-Sorted by date ascending. Never overwrites — always appends.
+Sorted by date. Never overwrites — always appends.
+
+### npt_source_tags table
+Master list for autocomplete: id, tag_name, tag_slug, usage_count, created_at
 
 ---
 
 ## Auto-generation Rules
 
 **proj_pkey:** `P` + comp_pkey[1] + comp_pkey[1] + proj_id
-Example: Company pkey `CDA1` → proj_pkey `PDD41004`
+Example: comp_pkey `CDA1` → proj_pkey `PDD41004`
 
-**proj_slug:** sanitized(proj_project + ' in ' + proj_district + ' ' + proj_pkey_lowercase)
+**proj_slug:** sanitized(proj_project + ' in ' + proj_district + ' ' + proj_pkey)
 
 **comp_pkey:** `C` + company[0] + city[0] + comp_id
 
-**comp_slug:** sanitized company name
-
-**proj_costrange:** Auto-calculated from proj_cost:
+**proj_costrange:** Auto from proj_cost:
 - < 100M → Less than 100 Million
 - 100–999M → From 100 Million to 999 Million
 - 1000–4999M → From 1000 Million to 4999 Million
@@ -139,11 +175,11 @@ Example: Company pkey `CDA1` → proj_pkey `PDD41004`
 ---
 
 ## Source Tables — Current State
-- `npis_projects` — **41,003 rows** (2017–Apr 13, 2026)
+- `npis_projects` — **40,948 rows** (all published, 2017–Apr 13, 2026)
 - `npis_companies` — **36,695 rows**
 - `npis_refer` — **50,845 rows**
-- PRIMARY KEY on proj_id and comp_id ✅
-- **3 days pending entry (Apr 14–16) via crud.php**
+- PRIMARY KEY on proj_id ✅ and comp_id ✅
+- 55 unpublished entries deleted — clean slate for new workflow
 
 **KEY RULES:**
 - `proj_industry` NOT `proj_sector`
@@ -152,28 +188,34 @@ Example: Company pkey `CDA1` → proj_pkey `PDD41004`
 
 ---
 
-## Subscriber Dashboard — Files
-- **Files:** /home/newprojectstracker.in/public_html/dashboard/
-- **Admin subfolder:** dashboard/admin/ — only index.php + user.php remain (subscriber user management)
+## Staff Instructions for Monday (One-time)
 
-### Dashboard Pages Status
+1. Check legacy system for projects published Apr 14–18
+2. For each one — add via NPT Admin crud.php
+3. Set `proj_publish_date` to the correct date
+4. Publish immediately
+5. From Tuesday — use new workflow (Repository → Daily → Weekly)
 
-| File | Status |
-|------|--------|
-| _auth.php | ✅ |
-| _layout.php | ✅ |
-| index.php | ✅ Stats + recent projects |
-| projects.php | ✅ Search + filters + access controls |
-| project.php | ✅ 4 tabs, credit gate |
-| companies.php | ✅ |
-| company.php | ✅ |
-| briefcase.php | ✅ |
-| watchlist.php | ✅ |
-| usage.php | ✅ |
-| profile.php | ✅ |
-| pricing.php | ✅ (needs layout refactor) |
-| admin/index.php | ✅ Subscriber user management |
-| admin/user.php | ✅ User control panel |
+---
+
+## NPT Subscriber Portal — Pages Status
+
+| File | Status | Notes |
+|------|--------|-------|
+| _auth.php | ✅ | |
+| _layout.php | ✅ | |
+| index.php | ✅ | Stats + recent projects |
+| projects.php | ✅ | Search + filters + access controls |
+| project.php | ✅ | 4 tabs, credit gate, restriction modal |
+| companies.php | ✅ | |
+| company.php | ✅ | |
+| briefcase.php | ✅ | |
+| watchlist.php | ✅ | |
+| usage.php | ✅ | |
+| profile.php | ✅ | |
+| pricing.php | ✅ | Needs layout refactor |
+| admin/index.php | ✅ | Subscriber user management |
+| admin/user.php | ✅ | User control panel |
 
 ---
 
@@ -181,27 +223,26 @@ Example: Company pkey `CDA1` → proj_pkey `PDD41004`
 
 | # | Task |
 |---|------|
-| 1 | **Test CRUD end-to-end** — enter Apr 14–16 backlog via crud.php |
-| 2 | **Watchlist trigger** — fire matching when new project saved via crud_save.php |
-| 3 | **Staff training** — walk Sbiru + Revathi through admin workflow |
-| 4 | **Razorpay** — Jp to get new key pair from Shopify vendor |
-| 5 | **Razorpay integration** — create_order → verify → webhook |
-| 6 | **login.php** — set credits_reset_date on registration |
-| 7 | **Email verification** — AWS SES |
-| 8 | **pricing.php** — refactor to _layout.php |
-| 9 | **Public pages Phase 3** — company + product tag pages |
+| 1 | **Staff Monday task** — enter Apr 14–18 backlog via NPT Admin |
+| 2 | **Watchlist trigger** — fire matching on new project save in crud_save.php |
+| 3 | **Razorpay keys** — Jp to get from Shopify vendor |
+| 4 | **Razorpay integration** — create_order → verify → webhook |
+| 5 | **login.php** — set credits_reset_date on registration |
+| 6 | **Email verification** — AWS SES |
+| 7 | **pricing.php** — refactor to _layout.php |
+| 8 | **Public pages Phase 3** — company + product tag pages |
+| 9 | **Weekly report** — fix weekly flag for legacy daily entries |
 
 ---
 
 ## Design Systems
 
-### Admin Panel (dark)
-- Sidebar: #1a1a2e (very dark navy)
-- Accent: #e94560 (red)
+### NPT Admin Portal
+- Sidebar: #1a1a2e, Accent: #e94560 (red)
 - Background: #f0f2f5
 
-### Subscriber Dashboard
-- Navy: #1a3c6e, Orange: #e87722, Gray BG: #f5f7fa
+### NPT Subscriber Portal
+- Navy: #1a3c6e, Orange: #e87722
 - Fonts: DM Serif Display + DM Sans
 
 ---
@@ -222,15 +263,15 @@ Example: Company pkey `CDA1` → proj_pkey `PDD41004`
 | 9 | 14 Apr AM | Admin panel, access controls |
 | 10 | 14 Apr PM | Watchlist, Razorpay domain verified |
 | 11 | 15 Apr AM | Import pipeline, PRIMARY KEY fix |
-| 12 | 16 Apr | Full dataset imported (41,003 projects). CRUD spec locked. |
-| 13 | 17 Apr | Standalone admin panel built at /admin/. Login, dashboard, projects list, project view with Quick Edit, add/edit project form, milestone system, source tags. Completely separate from subscriber dashboard. |
+| 12 | 16 Apr | Full dataset imported — 41,003 projects |
+| 13 | 17–18 Apr | Standalone NPT Admin built. Project view + Quick Edit. Repository → Daily → Weekly workflow. Download Excel. Flush. 55 unpublished deleted. Clean slate for Monday. |
 
 ---
 
 ## Key Rules
 - **newprojectstracker.com: NEVER TOUCH**
-- Admin panel: /admin/ — completely separate from /dashboard/
+- NPT Admin: /admin/ — completely separate from /dashboard/
+- Unpublish only from project view page — not from listing
 - proj_industry = primary sector (NOT proj_sector)
-- proj_project = project name (NOT proj_name)
 - Delete SQL dumps immediately after import
 - Always verify PRIMARY KEY before importing
