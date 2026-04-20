@@ -1,24 +1,18 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 19 April 2026 (Day 14)**
+**Last Updated: 20 April 2026 (Day 15 — Mid Session)**
 
 ---
 
-## Three Internal Tools — One Database
+## Four Systems — One Database
 
-All three share `newp_ai_engine`. Each has its own login, session, and team.
-
-| Tool | URL | Team | Purpose |
-|------|-----|------|---------|
-| NPT Admin Portal | /admin/ | Researchers | Daily project entry, publish workflow |
-| NPT Console | /console/ | Marketing | User management, analytics, CIN tracking |
-| NPT Orders Portal | /orders/ | Sales & Finance | Payments, invoices, quotations *(TO BUILD)* |
-
-Plus the subscriber-facing product:
-
-| Product | URL | Users | Purpose |
-|---------|-----|-------|---------|
-| NPT Subscriber Portal | /dashboard/ | Paid subscribers | Browse projects |
+| System | URL | Team | Status |
+|--------|-----|------|--------|
+| NPT Subscriber Portal | /dashboard/ | Paid subscribers | ✅ Live |
+| NPT Admin Portal | /admin/ | Researchers | ✅ Live |
+| NPT Console | /console/ | Marketing | ✅ Live |
+| NPT Orders Portal | /orders/ | Sales & Finance | 🔲 To Build |
+| Public Website | / | Public | 🔲 In Progress |
 
 ---
 
@@ -32,29 +26,60 @@ Plus the subscriber-facing product:
 
 ---
 
+## Login Credentials — All Portals
+
+### Jayaprakash (icarusprakash@gmail.com / Npt@2026)
+- NPT Admin: https://newprojectstracker.in/admin/
+- NPT Console: https://newprojectstracker.in/console/
+- NPT Subscriber: https://newprojectstracker.in/dashboard/
+
+### Indscan Admin (indscan.projects@gmail.com)
+- NPT Admin: NPTAdmin2026!
+- NPT Console: NPTConsole2026!
+- NPT Subscriber: Npt@2026
+
+### Sbiru (sbirumca85@gmail.com)
+- NPT Admin: NPTEditor2026! (editor role)
+- NPT Console: NPTConsole2026! (marketing role)
+
+---
+
 ## CIN — Customer Information Number
-
-Auto-generated unique ID per subscriber. Format: `NPT-YYYY-NNNNN`
-Example: `NPT-2026-00001`
-
-- Generated on registration (self or manual via Console)
+- Format: NPT-YYYY-NNNNN (e.g. NPT-2026-00001)
+- Auto-generated on registration (self or manual via Console)
+- Column `cin` added to `npt_users` ✅
 - Links: npt_users ↔ npt_orders ↔ npt_payments ↔ npt_invoices ↔ npt_activity_log
-- Column `cin` in `npt_users` table ✅
+
+---
+
+## Activity Tracking — COMPLETED TODAY
+
+Added logging to subscriber portal:
+
+**Files modified:**
+- `dashboard/_auth.php` — logs `page_view` on every page (throttled per session)
+- `dashboard/login.php` — logs `login` on successful login
+- `dashboard/project.php` — logs `project_view` with project name as detail
+
+**Table:** `npt_activity_log` (id, user_id, action, page, detail, ip_address, created_at)
+
+**Console Activity Feed** at `/console/activity.php` — confirmed working, showing real events.
 
 ---
 
 ## NPT Admin Portal (`/admin/`)
 
-### Files
+### All Files
 | File | Purpose |
 |------|---------|
 | login.php | Dark theme login |
-| _auth.php | Auth guard (session: npt_admin_*) |
-| _layout.php | Sidebar (dark navy + red accent) |
-| index.php | Dashboard — draft queue, stats |
+| _auth.php | Auth guard (npt_admin_*) |
+| _layout.php | Sidebar (dark navy + red) |
+| _layout_end.php | Closes layout |
+| index.php | Dashboard |
 | projects.php | All projects list |
 | project.php | Project view + Quick Edit |
-| crud.php | Full project entry/edit form |
+| crud.php | Full entry/edit form |
 | crud_save.php | Save handler |
 | crud_search.php | AJAX project search |
 | crud_company_search.php | AJAX company search |
@@ -71,78 +96,43 @@ Example: `NPT-2026-00001`
 | company.php | Company view |
 | logout.php | Logout |
 
-### Admin Users (npt_admin_users)
-| Email | Role |
-|-------|------|
-| icarusprakash@gmail.com | superadmin |
-| indscan.projects@gmail.com | superadmin |
-| sbirumca85@gmail.com | editor |
+### Bug Fixed Today
+- `proj_updateddate` now ONLY changes when `proj_details` OR `proj_stage` is edited
+- Fixed in both `crud_save.php` and `qe_save.php`
+- All other field edits (source, investment, location, publish status) do NOT change updated date
 
 ### Daily Workflow
 ```
-Mon–Fri: Researcher adds projects → REPOSITORY
-3:30 PM: Select 15 → Move to Daily & Publish → visible to subscribers
-Email marketer: Download Excel → create report → Flush Daily
+Mon–Fri: Researcher adds projects → REPOSITORY (proj_repository = 'YES')
+3:30 PM: Select 15 → Move to Daily & Publish
+Email marketer: Download Excel → create PDF report → Flush Daily
 Friday: Download Weekly Excel → send Monday → Flush Weekly
 ```
 
 ### Project Flags
-| Field | Value | Meaning |
-|-------|-------|---------|
-| proj_repository | YES | In bucket, not published |
-| proj_show | YES | Published |
-| proj_today | YES | In daily section |
-| proj_weekly | YES | In weekly section |
-| proj_publish_date | date | Go-live date |
+| Field | YES means |
+|-------|-----------|
+| proj_repository | In bucket, not published |
+| proj_show | Published, visible to subscribers |
+| proj_today | In today's daily section |
+| proj_weekly | In weekly section |
 
 ---
 
 ## NPT Console (`/console/`)
 
-### Files
+### All Files
 | File | Purpose |
 |------|---------|
-| login.php | Dark theme login (green accent) |
-| _auth.php | Auth guard (session: npt_console_*) |
-| _layout.php | Sidebar (dark + green CONSOLE badge) |
-| index.php | Dashboard — stats, signups, expiring, activity |
-| users.php | All subscribers list |
-| user.php | Individual user — manage plan, credits, access |
-| add_user.php | Manually add new subscriber (CIN auto-generated) |
-| activity.php | Platform-wide activity feed |
+| login.php | Dark login (green accent) |
+| _auth.php | Auth guard (npt_console_*) |
+| _layout.php | Sidebar (dark + green CONSOLE) |
+| index.php | Dashboard |
+| users.php | All subscribers |
+| user.php | Manage individual user |
+| add_user.php | Add user manually (CIN auto-generated) |
+| activity.php | Platform activity feed |
 | logout.php | Logout |
-
-### Console Users (npt_console_users)
-| Email | Role |
-|-------|------|
-| icarusprakash@gmail.com | superadmin |
-| indscan.projects@gmail.com | superadmin |
-| sbirumca85@gmail.com | marketing |
-
-Password: `NPTConsole2026!` (change immediately)
-
-### Activity Tracking
-- Table: `npt_activity_log` (id, user_id, action, page, detail, ip_address, created_at)
-- **TO DO:** Add logging calls to subscriber portal — login, page views, project clicks, searches
-
----
-
-## NPT Orders Portal (`/orders/`) — TO BUILD
-
-### What it will manage
-- **Quotations** — proposals sent to prospects
-- **Orders** — confirmed subscriptions
-- **Payments** — every payment received (Razorpay + manual)
-- **Invoices** — auto-generated, downloadable PDF
-
-### New tables needed
-- `npt_quotations` — (id, cin, plan_type, amount, valid_until, status, created_at)
-- `npt_orders` — (id, cin, plan_type, amount, start_date, end_date, payment_mode, status)
-- `npt_payments` — (id, order_id, amount, paid_date, mode, reference, status)
-- `npt_invoices` — (id, payment_id, invoice_number, amount, issued_date, pdf_path)
-
-### Invoice numbering
-Format: `NPT-INV-YYYY-NNNNN` e.g. `NPT-INV-2026-00001`
 
 ---
 
@@ -151,20 +141,20 @@ Format: `NPT-INV-YYYY-NNNNN` e.g. `NPT-INV-2026-00001`
 ### Pages Status
 | File | Status |
 |------|--------|
-| _auth.php | ✅ |
-| _layout.php | ✅ |
-| index.php | ✅ Stats + recent projects |
-| projects.php | ✅ Search + filters + access controls |
-| project.php | ✅ 4 tabs, credit gate |
+| _auth.php | ✅ + activity logging added |
+| login.php | ✅ + login event logging added |
+| project.php | ✅ + project_view logging added |
+| projects.php | ✅ |
 | companies.php | ✅ |
 | company.php | ✅ |
 | briefcase.php | ✅ |
 | watchlist.php | ✅ |
 | usage.php | ✅ |
 | profile.php | ✅ |
-| pricing.php | ✅ Needs layout refactor |
-| admin/index.php | ✅ Subscriber user mgmt (to be retired → Console) |
-| admin/user.php | ✅ User control (to be retired → Console) |
+| pricing.php | ✅ needs layout refactor |
+| register.php | 🔲 NEEDS TO BE BUILT |
+| admin/index.php | ✅ (to retire → Console) |
+| admin/user.php | ✅ (to retire → Console) |
 
 ---
 
@@ -175,11 +165,11 @@ Format: `NPT-INV-YYYY-NNNNN` e.g. `NPT-INV-2026-00001`
 - `npis_companies` — 36,695 rows
 - `npis_refer` — 50,845 rows
 
-### Platform
-- `npt_users` — subscribers (has cin column ✅)
-- `npt_admin_users` — admin portal logins
+### Platform Tables
+- `npt_users` — subscribers (cin column ✅)
+- `npt_admin_users` — admin logins
 - `npt_console_users` — console logins
-- `npt_activity_log` — user activity tracking
+- `npt_activity_log` — user activity ✅
 - `npt_source_tags` — source tag autocomplete
 - `npt_waitlist` — waitlist captures
 - `npt_briefcase` — saved projects
@@ -187,40 +177,111 @@ Format: `NPT-INV-YYYY-NNNNN` e.g. `NPT-INV-2026-00001`
 - `npt_watchlist_projects` — matched projects
 - `npt_password_resets` — reset tokens
 
-### Orders (TO CREATE)
-- `npt_quotations`
-- `npt_orders`
-- `npt_payments`
-- `npt_invoices`
+### Orders Tables (TO CREATE)
+- `npt_quotations` — (id, cin, plan_type, amount, valid_until, status)
+- `npt_orders` — (id, cin, plan_type, amount, start_date, end_date, payment_mode, status)
+- `npt_payments` — (id, order_id, amount, paid_date, mode, reference, status)
+- `npt_invoices` — (id, payment_id, invoice_number, amount, issued_date, pdf_path)
 
 ---
 
-## npis_projects New Fields
-| Field | Purpose |
-|-------|---------|
-| proj_tags | Product tags |
-| proj_milestones | JSON milestone history |
-| proj_source_tags | Source classification |
-| proj_publish_date | Go-live date |
+## Public Website — IN PROGRESS
+
+### Current State
+Existing `index.php` is a well-built waitlist landing page. Design is excellent and will be repurposed.
+
+### Plan — Keep & Modify (not rebuild)
+**What changes:**
+- Header CTA: "Join Waitlist" → "Create Free Account" → `/dashboard/register.php`
+- Hero CTA: Replace waitlist button with "Create Free Account" + "Sign In"
+- Stats: Update 37,000 → 40,948
+- Waitlist section → Replace with "Get Started Free" section (two CTAs only)
+- Add client logos section (Jp to provide logos)
+- Add thin beta banner at top: "Now in Beta — Currently accepting free registrations"
+- Nav: Add "About" and "Sign In" links
+- Footer: Update copyright to 2026
+
+**What stays:**
+- Problem section (excellent, keep as-is)
+- Features/What We Do section
+- Industries grid (16 industries)
+- Who It's For section
+- Overall design, fonts, colors
+
+### Pages Planned
+1. Home (`/`) — modify existing index.php
+2. About (`/about.php`) — 30yr history, founder story
+3. Features (`/features.php`) — platform capabilities, no pricing
+4. Contact (`/contact.php`) — inquiry form
+
+### Key Decisions
+- No pricing on public site — pricing only inside dashboard
+- Only CTA: "Create Free Account" — no "Buy Now" anywhere
+- Legacy NPT users callout: "Already an NPT subscriber? Your new dashboard is here"
+- register.php needs to be built first
 
 ---
 
-## Auto-generation Rules
-- **CIN:** NPT-YYYY-NNNNN (sequential per year)
-- **proj_pkey:** P + comp_pkey[1] + comp_pkey[1] + proj_id
-- **proj_slug:** sanitized name + district + pkey
-- **comp_pkey:** C + company[0] + city[0] + comp_id
-- **Invoice no:** NPT-INV-YYYY-NNNNN
+## Next Steps — When We Resume (2 Hours)
+
+### Immediate (this session):
+1. **Build `register.php`** — new subscriber registration with CIN auto-generation
+2. **Redesign `index.php`** — modify existing landing page per plan above
+3. **Build `about.php`**, `features.php`, `contact.php`
+
+### After public site:
+4. **Orders Portal** — build `/orders/`
+5. **Razorpay integration** — Jp to get key secret
+6. **Watchlist trigger** — fire on new project save
+7. **Test case list** — prepare for afternoon testing session
+
+---
+
+## Test Cases (Prepare for Afternoon)
+
+### NPT Admin Portal
+- [ ] Add new project — search first, not found, create new
+- [ ] Edit existing project — change proj_details → updateddate changes
+- [ ] Edit existing project — change source URL only → updateddate does NOT change
+- [ ] Edit existing project — change proj_stage → updateddate changes
+- [ ] Add milestone inline on project view
+- [ ] Quick Edit — stage section, save, verify change
+- [ ] Move 3 projects from Repository to Daily
+- [ ] Verify Daily shows those 3 projects
+- [ ] Download Daily Excel
+- [ ] Flush Daily — verify section empties
+- [ ] Verify Weekly accumulates
+- [ ] Publish a draft project
+- [ ] Unpublish from project view page only
+- [ ] Search companies, view company page
+
+### NPT Console
+- [ ] Login as indscan.projects@gmail.com
+- [ ] View dashboard stats
+- [ ] View all users list
+- [ ] Open user profile — verify CIN shown
+- [ ] Change user plan type and save
+- [ ] View activity feed — verify login + page_view events show
+
+### NPT Subscriber Portal
+- [ ] Login — verify activity log records login event
+- [ ] Browse projects page — verify page_view logged
+- [ ] Click a project — verify project_view logged with project name
+- [ ] Add project to briefcase
+- [ ] Set a watchlist phrase
+- [ ] View usage page
+- [ ] View pricing page
 
 ---
 
 ## Design Systems
-| Tool | Sidebar | Accent | Badge |
-|------|---------|--------|-------|
+| Portal | Sidebar | Accent | Badge |
+|--------|---------|--------|-------|
 | Admin | #0f2444 | #e94560 red | ADMIN |
 | Console | #0d1117 | #2d6a4f green | CONSOLE |
 | Orders | TBD | TBD | ORDERS |
-| Subscriber | #1a3c6e | #e87722 orange | — |
+| Subscriber | #1a3c6e navy | #e87722 orange | — |
+| Public Site | — | navy + orange | — |
 
 ---
 
@@ -231,47 +292,26 @@ Format: `NPT-INV-YYYY-NNNNN` e.g. `NPT-INV-2026-00001`
 
 ---
 
-## Tomorrow's Agenda (20 Apr)
-1. **Activity tracking** — add logging to subscriber portal (_auth.php, project.php, projects.php)
-2. **Orders Portal** — build /orders/ with quotations, orders, payments, invoices
-3. **Razorpay** — wire up if key pair available
-4. **Test end-to-end** — login → Console logs it → payment → invoice
-
----
-
-## Next Tasks (Full List)
-| # | Task |
-|---|------|
-| 1 | Activity tracking in subscriber portal |
-| 2 | Orders Portal build |
-| 3 | Razorpay integration |
-| 4 | Watchlist trigger on new project save |
-| 5 | login.php — credits_reset_date on registration |
-| 6 | Email verification — AWS SES |
-| 7 | pricing.php — refactor to _layout.php |
-| 8 | Retire dashboard/admin/ → Console |
-| 9 | Public pages Phase 3 |
-
----
-
 ## Session Log
 | Day | Date | Key Deliverables |
 |-----|------|-----------------|
-| 1–2 | Early Apr | Placeholder + waitlist |
-| 3–8 | Apr | Full subscriber dashboard |
+| 1–2 | Early Apr | Placeholder + waitlist landing page |
+| 3–8 | Apr | Full subscriber dashboard built |
 | 9 | 14 Apr AM | Admin panel, access controls |
-| 10 | 14 Apr PM | Watchlist, Razorpay domain |
+| 10 | 14 Apr PM | Watchlist, Razorpay domain verified |
 | 11 | 15 Apr AM | Import pipeline, PRIMARY KEY fix |
 | 12 | 16 Apr | Full dataset imported — 41,003 projects |
-| 13 | 17–18 Apr | NPT Admin portal. Repository → Daily → Weekly. |
-| 14 | 19 Apr | NPT Console built. CIN system. npt_activity_log. Companies page in Admin. Orders Portal planned. |
+| 13 | 17–18 Apr | NPT Admin portal. Repository → Daily → Weekly workflow. |
+| 14 | 19 Apr | NPT Console. CIN system. Companies page in Admin. Orders Portal planned. |
+| 15 | 20 Apr | Activity tracking wired. Login/page/project events logging. proj_updateddate bug fixed. User credentials set across all portals. Public website redesign plan locked. Register.php identified as dependency. |
 
 ---
 
 ## Key Rules
 - **newprojectstracker.com: NEVER TOUCH**
-- Three portals: Admin (/admin/), Console (/console/), Orders (/orders/)
+- Three internal portals: Admin, Console, Orders
 - Subscriber portal: /dashboard/
+- proj_updateddate changes ONLY on proj_details or proj_stage edit
 - Unpublish only from project view page
 - proj_industry NOT proj_sector
 - Delete SQL dumps immediately after import
