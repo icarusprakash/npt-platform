@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 20 April 2026 (Day 15 — Session End)**
+**Last Updated: 21 April 2026 (Day 16)**
 
 ---
 
@@ -44,89 +44,152 @@
 
 ---
 
-## Public Website — ✅ COMPLETE
+## Plan Names — UPDATED (Day 16)
 
-### Pages
-| URL | File | Status |
-|-----|------|--------|
-| / | index.php | ✅ Full landing page |
-| /register.php | register.php | ✅ Split-screen registration |
-| /about.php | about.php | ✅ Story, timeline, values |
-| /features.php | features.php | ✅ Feature blocks + plan compare |
-| /contact.php | contact.php | ✅ Inquiry form → npt_contact_forms |
-| /login.php | login.php | ✅ Existing |
-| /forgot-password.php | forgot-password.php | ✅ Existing |
+| Old Name | New Name | Price |
+|----------|----------|-------|
+| Free | Basic | ₹0 / forever |
+| Basic | Starter | ₹14,950/month |
+| Premium | Premium | ₹99,000/year |
 
-### Key Decisions
-- No pricing on public site — pricing only inside /dashboard/pricing.php
-- Only CTA: "Create Free Account" — no "Buy Now"
-- Beta banner at top: "Now in Beta — Currently accepting free registrations"
-- Client logos section: placeholder "coming soon" — Jp to provide logos
-- Legacy NPT callout: "Already an NPT subscriber? Your new dashboard is here"
-- Contact form saves to `npt_contact_forms` table (auto-created)
+- DB enum updated: `npt_users.plan_type` = basic / starter / premium
+- Updated in: pricing.php, register.php, features.php, index.php, console/index.php, console/users.php
 
-### register.php
-- Split layout: left = marketing pitch + stats + free plan benefits
-- Right = registration form
-- Auto-generates CIN on signup (NPT-YYYY-NNNNN)
-- Sets plan_type = 'free', credits_monthly = 5
-- Logs 'register' event to npt_activity_log
-- Redirects to /dashboard/?welcome=1
+---
+
+## Branding — UPDATED (Day 16)
+
+### Logo
+- Blue background: `/assets/img/logo-blue.jpg` — used in Console sidebar
+- Orange background: `/assets/img/logo-orange.jpg` — used in all public pages, subscriber portal, register page
+- All pages: logo image replaces old "NPT" text badge
+- Tagline "EARLY PROJECT INTELLIGENCE" shown below logo
+
+### Company
+- NPT Intelligence is a product of **Kariyamangalam Technologies Pvt Ltd**, Chennai
+- Website: https://www.kariyamangalam.in
+- Mentioned subtly on About, Features pages
+- Full footer on all public pages + internal portals:
+  - "A product of Kariyamangalam Technologies Pvt Ltd, Chennai · Built with Claude"
+
+### Social Links (on public pages)
+- NPT LinkedIn: https://www.linkedin.com/company/nptris/
+- NPT Twitter/X: https://x.com/NPTrackerOfcl
+- Founder LinkedIn: https://www.linkedin.com/in/jayaprakashsampath (About page + footer)
+
+### Sales Contact
+- **Ms. Kavitha Prakash** — Head of Sales
+- Phone/WhatsApp: +91 91710 15659
+- Prominent banner on Contact page, link on Pricing page
+
+### Address (Contact page)
+```
+Kariyamangalam Technologies Pvt Ltd
+NPT Intelligence Division
+II Floor, Opp to RTO Office
+9/25, Raghavendra Colony, Kaliamman Koil Street
+Chinmaya Nagar, Virugambakkam
+Chennai, Tamil Nadu 600092
+```
+Google Maps: https://maps.app.goo.gl/abGz671s6F77KTns6
+
+---
+
+## Public Website — ✅ Complete
+
+| URL | Status |
+|-----|--------|
+| / | ✅ Home — beta banner, logo, CTA |
+| /register.php | ✅ Split-screen registration |
+| /about.php | ✅ Story, timeline, Jp LinkedIn linked |
+| /features.php | ✅ Feature blocks, plan comparison |
+| /contact.php | ✅ Full address, Kavitha banner, social links |
+| /login.php | ✅ |
+| /forgot-password.php | ✅ |
+
+---
+
+## PLANNED FEATURE SPECS (Next Sprints)
+
+---
+
+### Sprint: Registration Redesign & Legacy Migration
+**Status: Planned — Day 17**
+
+**Dependencies to arrange:**
+1. SMS Provider — sign up for Fast2SMS, get API key
+2. Legacy user export — DBA to export `npis_users` from GoDaddy as SQL dump
+3. WhatsApp contact number for paid user manual activation
+
+**Flow:**
+1. User enters name + mobile → OTP sent → verified
+2. After OTP: fill email, company, designation, password
+3. Legacy migration option: enter mobile → check `npis_legacy_users` table
+   - Free legacy user: pull data, pre-fill form, register as migrated
+   - Paid legacy user: show "Contact us" message for manual activation
+4. Welcome splash screen after registration
+
+**DB changes needed:**
+- Add `phone_verified` tinyint to `npt_users`
+- Create `npt_otp_log` (mobile, otp, expires_at, verified, created_at)
+- Import legacy users as `npis_legacy_users` (read-only)
+- Console flags: `source` = self_register / migrated / admin
+
+**Files to build:**
+- `register.php` — 2-step OTP flow
+- `otp_send.php` — Fast2SMS API
+- `otp_verify.php` — AJAX OTP check
+- `dashboard/welcome.php` — post-registration splash
+
+---
+
+### Sprint: Pricing & Payment Flow
+**Status: Planned — Day 18**
+
+**Starter Plan (₹14,950/month)**
+- Two payment paths:
+  1. Online via Razorpay → instant activation
+  2. Offline (NEFT/UPI/Cheque) → activation after payment realisation
+- Tax invoice: form (name, company, GSTIN, address) → PDF on Kariyamangalam letterhead → download or email
+- Clearly stated: online = instant, offline = manual activation
+
+**Premium Plan (₹99,000/year)**
+- Three paths:
+  1. Online via Razorpay → instant activation
+  2. Offline payment → manual activation
+  3. Formal quotation route → fill form → download PDF quotation → offline sales process via Kavitha Prakash → manual activation
+- Clearly stated before choosing path
+
+**Project Credits (Basic plan users)**
+- Buy credits instead of full subscription
+- Packages TBD (100, 200 credits)
+- Show as "Coming Soon" teaser on pricing page to gauge interest
+
+**Key principles:**
+- No pre-sales pressure anywhere
+- Transparent upfront about activation timelines
+- Online = instant always
+- Offline/quotation = manual activation after payment realisation
 
 ---
 
 ## CIN — Customer Information Number
-- Format: NPT-YYYY-NNNNN (e.g. NPT-2026-00001)
-- Auto-generated on registration (self or Console)
+- Format: NPT-YYYY-NNNNN
 - Column `cin` in `npt_users` ✅
-- Links all databases
+- Auto-generated on registration
 
 ---
 
-## Activity Tracking — ✅ COMPLETE
-
-**Files modified in subscriber portal:**
-- `dashboard/_auth.php` — page_view on every page (session-throttled)
-- `dashboard/login.php` — login event on successful login
-- `dashboard/project.php` — project_view with project name
-- `register.php` — register event on new signup
-
-**Table:** `npt_activity_log` (id, user_id, action, page, detail, ip_address, created_at)
-**Console Activity Feed:** `/console/activity.php` — confirmed working ✅
+## Activity Tracking ✅
+- dashboard/_auth.php → page_view
+- dashboard/login.php → login
+- dashboard/project.php → project_view
+- register.php → register
+- Table: npt_activity_log
 
 ---
 
 ## NPT Admin Portal (`/admin/`)
-
-### Bug Fixed (Day 15)
-`proj_updateddate` now ONLY changes when `proj_details` OR `proj_stage` is edited.
-Fixed in both `crud_save.php` and `qe_save.php`.
-
-### All Files
-| File | Purpose |
-|------|---------|
-| login.php | Dark theme login |
-| _auth.php | Auth guard (npt_admin_*) |
-| _layout.php | Sidebar (dark navy + red) |
-| index.php | Dashboard |
-| projects.php | All projects list |
-| project.php | Project view + Quick Edit |
-| crud.php | Full entry/edit form |
-| crud_save.php | Save handler |
-| crud_search.php | AJAX project search |
-| crud_company_search.php | AJAX company search |
-| crud_add_company.php | AJAX add company |
-| qe_save.php | Quick Edit AJAX save |
-| qe_milestone.php | Add milestone AJAX |
-| repository.php | Researcher's bucket |
-| daily.php | Today's 15 + download + flush |
-| weekly.php | Week's 75 + download + flush |
-| download.php | CSV download |
-| publish.php | Quick publish |
-| unpublish.php | Unpublish |
-| companies.php | Companies list |
-| company.php | Company view |
-| logout.php | Logout |
 
 ### Daily Workflow
 ```
@@ -136,65 +199,31 @@ Email marketer: Download Excel → report → Flush Daily
 Friday: Download Weekly → send Monday → Flush Weekly
 ```
 
----
-
-## NPT Console (`/console/`)
-
-### All Files
-| File | Purpose |
-|------|---------|
-| login.php | Dark login (green) |
-| _auth.php | Auth guard (npt_console_*) |
-| _layout.php | Sidebar (dark + green CONSOLE) |
-| index.php | Dashboard |
-| users.php | All subscribers |
-| user.php | Manage individual user |
-| add_user.php | Add user (CIN auto-generated) |
-| activity.php | Activity feed |
-| logout.php | Logout |
-
----
-
-## NPT Subscriber Portal (`/dashboard/`)
-
-### Pages Status
-| File | Status |
-|------|--------|
-| _auth.php | ✅ + page_view logging |
-| login.php | ✅ + login logging |
-| project.php | ✅ + project_view logging |
-| projects.php | ✅ |
-| companies.php | ✅ |
-| company.php | ✅ |
-| briefcase.php | ✅ |
-| watchlist.php | ✅ |
-| usage.php | ✅ |
-| profile.php | ✅ |
-| pricing.php | ✅ needs layout refactor |
-| admin/index.php | ✅ to retire → Console |
-| admin/user.php | ✅ to retire → Console |
+### Key Rules
+- proj_updateddate changes ONLY on proj_details or proj_stage edit
+- Unpublish only from project view page
 
 ---
 
 ## Database Tables
 
 ### Core Data
-- `npis_projects` — 40,948 rows (all published)
+- `npis_projects` — 40,948 rows
 - `npis_companies` — 36,695 rows
 - `npis_refer` — 50,845 rows
 
 ### Platform
-- `npt_users` — subscribers (cin ✅)
-- `npt_admin_users` — admin logins
-- `npt_console_users` — console logins
-- `npt_activity_log` — user activity ✅
-- `npt_contact_forms` — contact page submissions ✅
-- `npt_source_tags` — source tag autocomplete
-- `npt_waitlist` — old waitlist captures
-- `npt_briefcase` — saved projects
-- `npt_watchlist_phrases` — watch phrases
-- `npt_watchlist_projects` — matched projects
-- `npt_password_resets` — reset tokens
+- `npt_users` — plan_type: basic/starter/premium
+- `npt_admin_users`
+- `npt_console_users`
+- `npt_activity_log` ✅
+- `npt_contact_forms` ✅
+- `npt_source_tags`
+- `npt_waitlist`
+- `npt_briefcase`
+- `npt_watchlist_phrases`
+- `npt_watchlist_projects`
+- `npt_password_resets`
 
 ### Orders (TO CREATE)
 - `npt_quotations`
@@ -208,70 +237,29 @@ Friday: Download Weekly → send Monday → Flush Weekly
 
 | # | Task |
 |---|------|
-| 1 | **Client logos** — Jp to provide, add to index.php logos section |
-| 2 | **Orders Portal** — build /orders/ |
-| 3 | **Razorpay integration** — Jp to get key secret |
-| 4 | **Watchlist trigger** — fire on new project save in crud_save.php |
-| 5 | **login.php** — set credits_reset_date on registration |
+| 1 | **Client logos** — Jp to provide, add to index.php |
+| 2 | **Registration redesign** — OTP + legacy migration (Day 17) |
+| 3 | **Pricing & payment flow** — Razorpay + quotation + credits (Day 18) |
+| 4 | **Orders Portal** — build /orders/ |
+| 5 | **Watchlist trigger** — fire on new project save |
 | 6 | **Email verification** — AWS SES |
-| 7 | **pricing.php** — refactor to _layout.php |
-| 8 | **Retire dashboard/admin/** → Console |
-| 9 | **Test case session** — run full test list (see below) |
-
----
-
-## Test Cases (For Next Testing Session)
-
-### NPT Admin Portal
-- [ ] Add new project — search first, not found, create new entry
-- [ ] Edit project details → proj_updateddate changes
-- [ ] Edit source URL only → proj_updateddate does NOT change
-- [ ] Edit proj_stage → proj_updateddate changes
-- [ ] Add milestone inline on project view page
-- [ ] Quick Edit — stage section, save, verify
-- [ ] Move 3 projects from Repository → Daily
-- [ ] Verify Daily shows those projects
-- [ ] Download Daily Excel
-- [ ] Flush Daily — verify empties
-- [ ] Verify Weekly accumulates
-- [ ] Publish a draft project
-- [ ] Unpublish from project view page only
-- [ ] Search companies, view company page
-
-### NPT Console
-- [ ] Login as indscan.projects@gmail.com
-- [ ] View dashboard stats
-- [ ] Open user profile — verify CIN shown
-- [ ] Change user plan type and save
-- [ ] View activity feed — login + page_view events showing
-
-### NPT Subscriber Portal
-- [ ] Login — activity log records login
-- [ ] Browse projects — page_view logged
-- [ ] Click project — project_view logged with project name
-- [ ] Add project to briefcase
-- [ ] Set watchlist phrase
-- [ ] View usage page
-- [ ] View pricing page
-
-### Public Website
-- [ ] Register new user via /register.php
-- [ ] Verify CIN auto-generated in Console
-- [ ] Verify redirect to /dashboard/?welcome=1
-- [ ] Contact form submission → saved to npt_contact_forms
-- [ ] All nav links working across all pages
-- [ ] "Already an NPT subscriber" link goes to /login.php
+| 7 | **Retire dashboard/admin/** → Console |
 
 ---
 
 ## Design Systems
-| Portal | Sidebar | Accent | Badge |
-|--------|---------|--------|-------|
-| Admin | #0f2444 | #e94560 red | ADMIN |
-| Console | #0d1117 | #2d6a4f green | CONSOLE |
-| Orders | TBD | TBD | ORDERS |
-| Subscriber | #1a3c6e | #e87722 orange | — |
-| Public | — | navy + orange | — |
+| Portal | Logo | Accent | Badge |
+|--------|------|--------|-------|
+| Admin | NPT text (internal only) | #e94560 red | ADMIN |
+| Console | logo-orange.jpg | #2d6a4f green | CONSOLE |
+| Subscriber | logo-orange.jpg | #e87722 orange | — |
+| Public | logo-orange.jpg | navy + orange | — |
+
+---
+
+## Assets
+- `/assets/img/logo-blue.jpg` — blue background logo
+- `/assets/img/logo-orange.jpg` — orange background logo
 
 ---
 
@@ -293,15 +281,16 @@ Friday: Download Weekly → send Monday → Flush Weekly
 | 12 | 16 Apr | Full dataset — 41,003 projects |
 | 13 | 17–18 Apr | NPT Admin portal. Repository → Daily → Weekly. |
 | 14 | 19 Apr | NPT Console. CIN system. Companies in Admin. |
-| 15 | 20 Apr | Activity tracking. proj_updateddate bug fix. Public website complete — Home, Register, About, Features, Contact. Beta banner. Client logos placeholder. |
+| 15 | 20 Apr | Activity tracking. proj_updateddate bug fix. Public website complete. |
+| 16 | 21 Apr | Branding: logo, Kariyamangalam, social links, address, Kavitha Prakash. Plan rename: Free→Basic, Basic→Starter. Pricing flow spec. Registration redesign spec. |
 
 ---
 
 ## Key Rules
 - **newprojectstracker.com: NEVER TOUCH**
-- Three internal portals: Admin (/admin/), Console (/console/), Orders (/orders/)
+- Three internal portals: Admin, Console, Orders
 - Subscriber portal: /dashboard/
-- Public site: / (index.php, register.php, about.php, features.php, contact.php)
+- Public site: /, register.php, about.php, features.php, contact.php
 - proj_updateddate changes ONLY on proj_details or proj_stage edit
 - Unpublish only from project view page
 - proj_industry NOT proj_sector
