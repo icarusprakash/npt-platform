@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 21 April 2026 (Day 16 — Session End)**
+**Last Updated: 22 April 2026 (Day 17 — Session End)**
 
 ---
 
@@ -26,303 +26,192 @@
 
 ---
 
-## Login Credentials — All Portals
+## Login Credentials
 
 ### Jayaprakash (icarusprakash@gmail.com / Npt@2026)
-- NPT Admin: https://newprojectstracker.in/admin/
-- NPT Console: https://newprojectstracker.in/console/
-- NPT Subscriber: https://newprojectstracker.in/dashboard/
+- Admin: https://newprojectstracker.in/admin/
+- Console: https://newprojectstracker.in/console/
+- Subscriber: https://newprojectstracker.in/dashboard/
 
-### Indscan Admin (indscan.projects@gmail.com)
-- NPT Admin: NPTAdmin2026!
-- NPT Console: NPTConsole2026!
-- NPT Subscriber: Npt@2026
+### Indscan (indscan.projects@gmail.com)
+- Admin: NPTAdmin2026! · Console: NPTConsole2026! · Subscriber: Npt@2026
 
 ### Sbiru (sbirumca85@gmail.com)
-- NPT Admin: NPTEditor2026! (editor)
-- NPT Console: NPTConsole2026! (marketing)
+- Admin: NPTEditor2026! · Console: NPTConsole2026!
 
 ---
 
-## Plan Names — UPDATED (Day 16)
-
-| Old Name | New Name | Price |
-|----------|----------|-------|
-| Free | Basic | ₹0 / forever |
-| Basic | Starter | ₹14,950/month |
-| Premium | Premium | ₹99,000/year |
-
-- DB enum: `npt_users.plan_type` = basic / starter / premium ✅
-- Updated in: pricing.php, register.php, features.php, index.php, console/index.php, console/users.php
+## Plan Names
+| Plan | Price |
+|------|-------|
+| Basic | ₹0 / forever |
+| Starter | ₹14,950/month |
+| Premium | ₹99,000/year |
 
 ---
 
-## Branding — UPDATED (Day 16)
+## Day 17 — What Was Built
 
-### Logo
-- Blue background: `/assets/img/logo-blue.jpg` — Console sidebar
-- Orange background: `/assets/img/logo-orange.jpg` — all public pages, subscriber portal
-- Tagline "EARLY PROJECT INTELLIGENCE" shown below logo on all pages
+### 1. crud.php — Two Changes
+- **Removed** "Search Existing Projects First" block — searching done in projects.php
+- **Added** green "📍 Add / Edit Address" button next to company section — only visible in edit mode
 
-### Company
-- NPT Intelligence is a product of **Kariyamangalam Technologies Pvt Ltd**, Chennai
-- Website: https://www.kariyamangalam.in
-- Footer on ALL pages (public + portals): "A product of Kariyamangalam Technologies Pvt Ltd, Chennai · Built with Claude"
+### 2. Company Address System — NEW
 
-### Social Links
-- NPT LinkedIn: https://www.linkedin.com/company/nptris/
-- NPT Twitter/X: https://x.com/NPTrackerOfcl
-- Founder LinkedIn: https://www.linkedin.com/in/jayaprakashsampath
-
-### Sales Contact
-- **Ms. Kavitha Prakash** — Head of Sales
-- Phone/WhatsApp: +91 91710 15659
-- Prominent banner on Contact page
-
-### Address
+#### New DB Table: `npt_company_addresses`
+```sql
+id, comp_id, address_type, address1, address2, city, pincode, state, region,
+telephone, email, website,
+person1_title, person1_name, person1_designation, person1_email,
+person2_title, person2_name, person2_designation, person2_email,
+remarks, taken_by, taken_date, created_at
 ```
-Kariyamangalam Technologies Pvt Ltd
-NPT Intelligence Division
-II Floor, Opp to RTO Office
-9/25, Raghavendra Colony, Kaliamman Koil Street
-Chinmaya Nagar, Virugambakkam
-Chennai, Tamil Nadu 600092
+
+#### New DB Column: `npis_refer.ref_address_id`
+- Links a specific address to a project-company connection
+- One project → multiple companies → each with their own address
+
+#### New File: `company_address.php`
+- **URL:** `/admin/company_address.php?comp_id=X&proj_id=Y&return=URL`
+- Top: Lists all existing addresses for the company
+  - Green = currently connected to this project
+  - Connect / Edit / Delete buttons per address
+- Bottom: Add new address form (or edit selected)
+- On new save: auto-connects to project if proj_id present
+- Address types: Promoter, Corporate Office, Plant/Factory, Regional Office, Consultant, EPC Contractor, Other
+
+### 3. Project Entry Workflow (Final)
 ```
-Google Maps: https://maps.app.goo.gl/abGz671s6F77KTns6
+1. /admin/crud.php → Connect company + fill project details → Save
+2. Draft Queue → project.php?id=X
+3. Full Edit → crud.php?edit=X
+4. Click "📍 Add / Edit Address"
+5. Check existing addresses → Connect if match
+   OR add new address → auto-connects
+6. Return to project → Publish
+```
+
+---
+
+## Tomorrow's Agenda (Day 18)
+
+### 1. Test Address System (First Thing)
+- Open existing project → Full Edit → click "📍 Add / Edit Address"
+- Add a new address → verify it saves and appears in list
+- Click Connect → verify green highlight
+- Edit an address → verify changes saved
+- Delete a test address
+
+### 2. Add Addresses Section to project.php
+- project.php currently does NOT show connected addresses
+- Need new block: "CONNECTED ADDRESSES" showing each company's address
+- Allows researcher to see all address info without going to Full Edit
+
+### 3. Remaining crud.php Field Changes
+- Jp to specify field-level changes at start of session
+
+### 4. Test Full Daily Workflow
+- Add projects → Repository → select 15 → Move to Daily & Publish
+- Download Excel → Flush Daily → verify Weekly accumulates
+
+### 5. Backlog Data Entry (if time)
+- Enter backlog projects Apr 14–21 with correct taken dates
+
+---
+
+## NPT Admin Portal — All Files
+
+| File | Purpose |
+|------|---------|
+| login.php | Login |
+| _auth.php | Auth guard |
+| _layout.php | Sidebar |
+| _layout_end.php | Footer |
+| index.php | Dashboard |
+| projects.php | Projects list |
+| project.php | Project view + Quick Edit |
+| crud.php | Full entry/edit form |
+| crud_save.php | Save handler |
+| crud_search.php | AJAX project search |
+| crud_company_search.php | AJAX company search |
+| crud_add_company.php | AJAX add company |
+| company_address.php | ✅ NEW — Address management |
+| qe_save.php | Quick Edit AJAX |
+| qe_milestone.php | Milestone AJAX |
+| repository.php | Repository bucket |
+| daily.php | Daily workflow |
+| weekly.php | Weekly workflow |
+| download.php | CSV download |
+| publish.php | Quick publish |
+| unpublish.php | Unpublish |
+| companies.php | Companies list |
+| company.php | Company view |
+| logout.php | Logout |
 
 ---
 
 ## Critical Bug Fixes (Day 16) — crud_save.php
-
-Four bugs were found and fixed in `/admin/crud_save.php`:
-
-**Bug 1: Old email whitelist blocking all saves**
-- Lines 3-6 had hardcoded check: only `icarusprakash@gmail.com` and `sbirumca85@gmail.com` allowed
-- `indscan.projects@gmail.com` was silently redirected without saving
-- Fix: Removed whitelist entirely — auth handled by `_auth.php`
-
-**Bug 2: Extra value in INSERT (column count mismatch)**
-- VALUES had 41 entries vs 40 columns
-- Extra `'$today'` was the culprit
-- Fix: Removed the extra `'$today'`
-
-**Bug 3: Wrong data type for proj_recently_viewed**
-- `'$taken_by_esc'` (name string) was being inserted into a DATE column
-- Fix: Changed to `NULL`
-
-**Bug 4: npis_refer INSERT missing ref_ID**
-- `ref_ID` is NOT NULL with no AUTO_INCREMENT
-- INSERT was failing silently
-- Fix: Added `MAX(ref_ID) + 1` logic before inserting
-
-**Result:** New project save confirmed working end-to-end:
-Admin saves → project appears in Repository → Publish Now → visible in Subscriber Portal ✅
+1. Email whitelist blocking indscan saves — removed
+2. Extra '$today' (41 vs 40 columns) — removed
+3. proj_recently_viewed DATE getting string — NULL
+4. npis_refer ref_ID missing — MAX+1 logic added
 
 ---
 
-## Public Website — ✅ Complete
-
-| URL | Status |
-|-----|--------|
-| / | ✅ Home |
-| /register.php | ✅ Registration |
-| /about.php | ✅ Story, timeline |
-| /features.php | ✅ Feature blocks |
-| /contact.php | ✅ Full address, Kavitha banner |
-| /login.php | ✅ |
-| /forgot-password.php | ✅ |
+## Branding
+- Logo: `/assets/img/logo-orange.jpg` (public/subscriber), `/assets/img/logo-blue.jpg` (console)
+- Footer all pages: "A product of Kariyamangalam Technologies Pvt Ltd, Chennai · Built with Claude"
+- Sales: Ms. Kavitha Prakash — +91 91710 15659
 
 ---
 
 ## PLANNED FEATURE SPECS
 
-### Sprint: Registration Redesign & Legacy Migration
-**Status: Planned — Day 17+**
+### Registration Redesign (Day 19+)
+Dependencies: Fast2SMS key + npis_users SQL dump + WhatsApp number
 
-**Dependencies to arrange BEFORE this sprint:**
-1. Sign up for Fast2SMS — get API key
-2. DBA to export `npis_users` table from GoDaddy as SQL dump
-3. Decide WhatsApp number for paid user manual activation
-
-**Flow:**
-1. User enters name + mobile → OTP sent → verified
-2. After OTP: email, company, designation, password
-3. Legacy check: enter mobile → search `npis_legacy_users`
-   - Free legacy user: pre-fill form → register as migrated
-   - Paid legacy user: "Contact us" message → manual activation
-4. Welcome splash after registration
-
-**DB changes needed:**
-- Add `phone_verified` tinyint to `npt_users`
-- Create `npt_otp_log` (mobile, otp, expires_at, verified, created_at)
-- Import legacy as `npis_legacy_users`
-- `source` field: self_register / migrated / admin
-
-**Files to build:**
-- `register.php` — 2-step OTP flow
-- `otp_send.php` — Fast2SMS API
-- `otp_verify.php` — AJAX OTP check
-- `dashboard/welcome.php` — splash screen
-
----
-
-### Sprint: Pricing & Payment Flow
-**Status: Planned — Day 18+**
-
-**Starter Plan (₹14,950/month)**
-- Online via Razorpay → instant activation
-- Offline (NEFT/UPI/Cheque) → manual activation after realisation
-- Tax invoice: form → PDF on Kariyamangalam letterhead → download/email
-
-**Premium Plan (₹99,000/year)**
-- Online via Razorpay → instant activation
-- Offline payment → manual activation
-- Formal quotation route → PDF quotation → offline sales via Kavitha → manual activation
-
-**Project Credits (Basic plan)**
-- Buy credits instead of subscription
-- Packages TBD (100, 200 credits)
-- "Coming Soon" teaser on pricing page
-
-**Key principles:**
-- No pre-sales pressure
-- Online = instant activation (always stated clearly)
-- Offline/quotation = manual activation after payment realisation
-
----
-
-## NPT Admin Portal — Daily Workflow
-
-```
-Mon–Fri: Researcher adds projects → REPOSITORY (proj_repository = 'YES')
-3:30 PM: Open Repository → select 15 → "Move to Daily & Publish"
-         → proj_show = YES, proj_today = YES, proj_weekly = YES
-         → Visible to subscribers immediately
-Email marketer: Open Daily → Download Excel → create PDF report → Flush Daily
-Friday: Open Weekly → Download Excel → send report Monday → Flush Weekly
-```
-
-### Project Flags
-| Field | YES means |
-|-------|-----------|
-| proj_repository | In bucket, not published |
-| proj_show | Published, visible |
-| proj_today | In daily section |
-| proj_weekly | In weekly section |
-
-### Key Rules
-- `proj_updateddate` changes ONLY on `proj_details` or `proj_stage` edit
-- Unpublish only from project view page (never from listing)
-- `proj_industry` NOT `proj_sector`
-- `proj_project` NOT `proj_name`
-
----
-
-## Tomorrow's Agenda — 22 April 2026 (Morning Session with Staff)
-
-### Data Entry Backlog (with Jp + data entry staff)
-1. Enter all backlog projects from Apr 14–21 (4 days) via `/admin/crud.php`
-2. Pre-date each project to correct taken date
-3. Publish each immediately after saving
-4. Verify each appears in Subscriber Portal
-
-### Daily Workflow Test (Afternoon)
-5. Add today's fresh projects → Repository
-6. Open Repository → select 15 → Move to Daily & Publish
-7. Verify Daily section shows 15 projects
-8. Download Excel from Daily
-9. Generate PDF manually from Excel (staff task)
-10. Flush Daily → verify empties
-11. Verify Weekly accumulated
-12. Debug any errors in real time
-
-### If time permits
-13. Test edit workflow — change proj_details → verify updateddate changes
-14. Test Quick Edit on project view page
-15. Test Unpublish from project view page
+### Pricing & Payment Flow (Day 20+)
+Starter: Razorpay + Offline + Tax invoice PDF
+Premium: above + Formal quotation PDF
+Basic credits: Coming Soon
 
 ---
 
 ## Database Tables
 
-### Core Data
-- `npis_projects` — 40,948 rows + new entries from Day 16
+### Core
+- `npis_projects` — 40,948+ rows
 - `npis_companies` — 36,695 rows
-- `npis_refer` — 50,845 rows
+- `npis_refer` — 50,845+ rows + ref_address_id column ✅
+- `npt_company_addresses` — NEW ✅
 
 ### Platform
-- `npt_users` — plan_type: basic/starter/premium ✅
-- `npt_admin_users`
-- `npt_console_users`
-- `npt_activity_log` ✅
-- `npt_contact_forms` ✅
-- `npt_source_tags`
-- `npt_waitlist`
-- `npt_briefcase`
-- `npt_watchlist_phrases`
-- `npt_watchlist_projects`
-- `npt_password_resets`
+- `npt_users`, `npt_admin_users`, `npt_console_users`
+- `npt_activity_log`, `npt_contact_forms`
 
 ### Orders (TO CREATE)
-- `npt_quotations`
-- `npt_orders`
-- `npt_payments`
-- `npt_invoices`
-
----
-
-## Next Tasks (Priority Order)
-
-| # | Task |
-|---|------|
-| 1 | **Tomorrow AM** — backlog entry + daily workflow test with staff |
-| 2 | **Client logos** — Jp to provide, add to index.php |
-| 3 | **Registration redesign** — OTP + legacy migration (needs Fast2SMS + SQL dump) |
-| 4 | **Pricing & payment flow** — Razorpay + quotation + credits |
-| 5 | **Orders Portal** — build /orders/ |
-| 6 | **Watchlist trigger** — fire on new project save |
-| 7 | **Email verification** — AWS SES |
-| 8 | **Retire dashboard/admin/** → Console |
-
----
-
-## Design Systems
-| Portal | Logo | Accent |
-|--------|------|--------|
-| Admin | NPT text (internal) | #e94560 red |
-| Console | logo-orange.jpg | #2d6a4f green |
-| Subscriber | logo-orange.jpg | #e87722 orange |
-| Public | logo-orange.jpg | navy + orange |
-
----
-
-## Razorpay — PENDING
-- Domain verified ✅
-- Key ID: rzp_live_D1cUKmkOav2Xx9
-- Key Secret: pending (Jp to get from Shopify vendor)
+- `npt_quotations`, `npt_orders`, `npt_payments`, `npt_invoices`
 
 ---
 
 ## Session Log
 | Day | Date | Key Deliverables |
 |-----|------|-----------------|
-| 1–2 | Early Apr | Placeholder + waitlist |
-| 3–8 | Apr | Full subscriber dashboard |
-| 9 | 14 Apr AM | Admin panel, access controls |
-| 10 | 14 Apr PM | Watchlist, Razorpay domain |
-| 11 | 15 Apr AM | Import pipeline, PRIMARY KEY fix |
-| 12 | 16 Apr | Full dataset — 41,003 projects |
-| 13 | 17–18 Apr | NPT Admin portal. Repository → Daily → Weekly. |
-| 14 | 19 Apr | NPT Console. CIN system. Companies in Admin. |
-| 15 | 20 Apr | Activity tracking. proj_updateddate bug fix. Public website complete. |
-| 16 | 21 Apr | Branding: logo, Kariyamangalam, social links, Kavitha. Plan rename: Free→Basic, Basic→Starter. 4 critical bugs fixed in crud_save.php. Save→Publish→Subscriber flow confirmed working end-to-end. |
+| 1–8 | Early Apr | Subscriber dashboard, waitlist |
+| 9–10 | 14 Apr | Admin panel, Watchlist |
+| 11–12 | 15–16 Apr | Import pipeline, full dataset |
+| 13 | 17–18 Apr | Admin portal. Repository → Daily → Weekly. |
+| 14 | 19 Apr | Console. CIN. Companies. |
+| 15 | 20 Apr | Activity tracking. Public website. |
+| 16 | 21 Apr | Branding. Plan rename. 4 crud_save bugs fixed. |
+| 17 | 22 Apr | Search block removed. Address button added. npt_company_addresses table created. company_address.php built. |
 
 ---
 
 ## Key Rules
 - **newprojectstracker.com: NEVER TOUCH**
-- Admin: /admin/ · Console: /console/ · Subscriber: /dashboard/ · Public: /
 - proj_updateddate changes ONLY on proj_details or proj_stage edit
 - Unpublish only from project view page
 - proj_industry NOT proj_sector
 - Delete SQL dumps immediately after import
+- company_address.php saves to npt_company_addresses — NOT npis_companies
