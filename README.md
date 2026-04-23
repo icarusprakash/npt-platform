@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 22 April 2026 (Day 17 — Session End)**
+**Last Updated: 23 April 2026 (Day 18 — Session End)**
 
 ---
 
@@ -50,72 +50,99 @@
 
 ---
 
-## Day 17 — What Was Built
+## Day 18 — What Was Built
 
-### 1. crud.php — Two Changes
-- **Removed** "Search Existing Projects First" block — searching done in projects.php
-- **Added** green "📍 Add / Edit Address" button next to company section — only visible in edit mode
+### 1. Complete Project Entry Workflow (Final)
 
-### 2. Company Address System — NEW
+```
+Step 1: /admin/crud.php
+  - Search company in modal → connect existing OR add new (name only)
+  - Fill project details → Save New Project
 
-#### New DB Table: `npt_company_addresses`
-```sql
-id, comp_id, address_type, address1, address2, city, pincode, state, region,
-telephone, email, website,
-person1_title, person1_name, person1_designation, person1_email,
-person2_title, person2_name, person2_designation, person2_email,
-remarks, taken_by, taken_date, created_at
+Step 2: /admin/project_address.php (auto-redirect after save)
+  - Shows connected company tab with ✓ tick when address connected
+  - Shows legacy address from npis_companies if no new address exists
+  - "Yes — Use This Address" → saves legacy as new record → auto-connects
+  - OR click "+ Add New Address" → fill form → save → auto-connects
+  - "+ Add Another Company" → search company → set role → connect
+  - Each company gets its own address tab
+  - "✓ Done — Move to Repository" → moves project to repository
+
+Step 3: /admin/projects.php?status=draft OR repository
+  - View button → /admin/project.php?id=X
+  - Delete button (draft only)
+  - Publish button (repository only)
+
+Step 4: /admin/project.php?id=X
+  - Full project view with all fields
+  - Quick Edit on every section
+  - Connected Address block
+  - Full Edit button → crud.php?edit=X
 ```
 
-#### New DB Column: `npis_refer.ref_address_id`
-- Links a specific address to a project-company connection
-- One project → multiple companies → each with their own address
+### 2. New Files Built
 
-#### New File: `company_address.php`
-- **URL:** `/admin/company_address.php?comp_id=X&proj_id=Y&return=URL`
-- Top: Lists all existing addresses for the company
-  - Green = currently connected to this project
-  - Connect / Edit / Delete buttons per address
-- Bottom: Add new address form (or edit selected)
-- On new save: auto-connects to project if proj_id present
-- Address types: Promoter, Corporate Office, Plant/Factory, Regional Office, Consultant, EPC Contractor, Other
+| File | Purpose |
+|------|---------|
+| project_address.php | Step-by-step address connection screen |
+| ajax_save_address.php | AJAX handler — save new address + auto-connect |
+| ajax_update_comptype.php | AJAX handler — update company role in project |
+| delete_project.php | Delete draft projects (drafts only, never published) |
 
-### 3. Project Entry Workflow (Final)
-```
-1. /admin/crud.php → Connect company + fill project details → Save
-2. Draft Queue → project.php?id=X
-3. Full Edit → crud.php?edit=X
-4. Click "📍 Add / Edit Address"
-5. Check existing addresses → Connect if match
-   OR add new address → auto-connects
-6. Return to project → Publish
-```
+### 3. crud.php Changes
+- "Add New Company" modal: removed address fields — company name only
+- "Change Company" button removed — company cannot be changed after connecting
+- "+ Connect Company" button hidden once company is connected
+- After new project save: redirects to `project_address.php` instead of `project.php`
+
+### 4. crud_save.php Changes
+- New project redirect → `/admin/project_address.php?proj_id=X`
+
+### 5. project.php Changes
+- **Teaser** added to Description view section
+- **End Product** and **Key Equipment** added to Investment & Capacity view section
+- **Connected Address** block added — shows all addresses from `npt_company_addresses`
+- Legacy address fallback — shows `npis_companies` address for old projects
+- All Quick Edit sections work for Draft, Repository, and Published projects
+
+### 6. projects.php Changes
+- **Edit** button renamed to **View**
+- **Publish** button shown only for Repository projects
+- **Delete** button shown only for Draft projects
+- Draft projects: View + Delete only
+- Repository projects: View + Publish + Delete
+- Published projects: View only
+
+### 7. project_address.php Features
+- Company tabs — click to switch between connected companies
+- Role dropdown (Promoter, EPC Contractor, Consultant etc.) — saves via AJAX
+- Legacy address display with "Yes — Use This Address" button
+- Existing address list with Connect / Edit buttons
+- Add New Address inline form
+- "+ Add Another Company" section with company search
+- Auto-connects new address to project on save
 
 ---
 
-## Tomorrow's Agenda (Day 18)
+## Company Address System
 
-### 1. Test Address System (First Thing)
-- Open existing project → Full Edit → click "📍 Add / Edit Address"
-- Add a new address → verify it saves and appears in list
-- Click Connect → verify green highlight
-- Edit an address → verify changes saved
-- Delete a test address
+### Tables
+- `npt_company_addresses` — stores all address records per company
+- `npis_refer.ref_address_id` — links specific address to project-company connection
 
-### 2. Add Addresses Section to project.php
-- project.php currently does NOT show connected addresses
-- Need new block: "CONNECTED ADDRESSES" showing each company's address
-- Allows researcher to see all address info without going to Full Edit
+### Key Rules
+- One company can have multiple addresses
+- One project can have multiple companies (each with different role)
+- Same company can be Promoter in one project, EPC Contractor in another
+- Address type is per connection, not per address record
+- Legacy addresses in `npis_companies` are shown as fallback — never deleted
+- When "Yes — Use This Address" is clicked, legacy address is copied to `npt_company_addresses`
 
-### 3. Remaining crud.php Field Changes
-- Jp to specify field-level changes at start of session
+### Address Types
+Promoter, Corporate Office, Plant/Factory, Site Office, Regional Office, Consultant Office, EPC Contractor Office, Other
 
-### 4. Test Full Daily Workflow
-- Add projects → Repository → select 15 → Move to Daily & Publish
-- Download Excel → Flush Daily → verify Weekly accumulates
-
-### 5. Backlog Data Entry (if time)
-- Enter backlog projects Apr 14–21 with correct taken dates
+### Company Roles per Project
+Promoter, Corporate Office, Plant/Factory, Regional Office, Consultant, EPC Contractor, Sub-Contractor, Financial Institution, Government Body, Other
 
 ---
 
@@ -128,14 +155,18 @@ remarks, taken_by, taken_date, created_at
 | _layout.php | Sidebar |
 | _layout_end.php | Footer |
 | index.php | Dashboard |
-| projects.php | Projects list |
-| project.php | Project view + Quick Edit |
+| projects.php | Projects list (View/Publish/Delete logic) |
+| project.php | Project view + Quick Edit (all fields) |
 | crud.php | Full entry/edit form |
-| crud_save.php | Save handler |
+| crud_save.php | Save handler → redirects to project_address.php |
 | crud_search.php | AJAX project search |
 | crud_company_search.php | AJAX company search |
-| crud_add_company.php | AJAX add company |
-| company_address.php | ✅ NEW — Address management |
+| crud_add_company.php | AJAX add company (name only) |
+| project_address.php | ✅ NEW — Address connection screen |
+| company_address.php | Company address add/edit form |
+| ajax_save_address.php | ✅ NEW — AJAX address save |
+| ajax_update_comptype.php | ✅ NEW — AJAX company role update |
+| delete_project.php | ✅ NEW — Delete draft project |
 | qe_save.php | Quick Edit AJAX |
 | qe_milestone.php | Milestone AJAX |
 | repository.php | Repository bucket |
@@ -147,6 +178,15 @@ remarks, taken_by, taken_date, created_at
 | companies.php | Companies list |
 | company.php | Company view |
 | logout.php | Logout |
+
+---
+
+## Backlog Entry Plan
+- ~75 projects piled up Apr 14–23 in legacy system
+- Recommendation: Manual entry (NOT SQL import)
+- Reason: New schema changes (address system, workflow logic) make direct import risky
+- Strategy: Enter today's 15 first to smooth workflow, then tackle backlog in batches
+- Legacy addresses will auto-show in project_address.php — staff clicks "Yes — Use This Address"
 
 ---
 
@@ -168,12 +208,12 @@ remarks, taken_by, taken_date, created_at
 ## PLANNED FEATURE SPECS
 
 ### Registration Redesign (Day 19+)
-Dependencies: Fast2SMS key + npis_users SQL dump + WhatsApp number
+Dependencies: Fast2SMS API key + npis_users SQL dump + WhatsApp number for paid activation
 
 ### Pricing & Payment Flow (Day 20+)
-Starter: Razorpay + Offline + Tax invoice PDF
-Premium: above + Formal quotation PDF
-Basic credits: Coming Soon
+- Starter: Razorpay (instant) + Offline + Tax invoice PDF
+- Premium: above + Formal quotation PDF route
+- Basic credits: Coming Soon teaser
 
 ---
 
@@ -182,15 +222,31 @@ Basic credits: Coming Soon
 ### Core
 - `npis_projects` — 40,948+ rows
 - `npis_companies` — 36,695 rows
-- `npis_refer` — 50,845+ rows + ref_address_id column ✅
+- `npis_refer` — 50,845+ rows + ref_address_id ✅
 - `npt_company_addresses` — NEW ✅
 
 ### Platform
-- `npt_users`, `npt_admin_users`, `npt_console_users`
+- `npt_users` — basic/starter/premium
+- `npt_admin_users`, `npt_console_users`
 - `npt_activity_log`, `npt_contact_forms`
 
 ### Orders (TO CREATE)
 - `npt_quotations`, `npt_orders`, `npt_payments`, `npt_invoices`
+
+---
+
+## Next Tasks (Priority Order)
+
+| # | Task |
+|---|------|
+| 1 | Enter today's projects through new workflow — test end to end |
+| 2 | Enter backlog Apr 14–23 in batches |
+| 3 | Test Repository → Daily → Download → Flush workflow |
+| 4 | Registration redesign (needs dependencies) |
+| 5 | Pricing & payment flow |
+| 6 | Orders Portal |
+| 7 | Watchlist trigger on new project save |
+| 8 | Client logos for homepage |
 
 ---
 
@@ -204,7 +260,8 @@ Basic credits: Coming Soon
 | 14 | 19 Apr | Console. CIN. Companies. |
 | 15 | 20 Apr | Activity tracking. Public website. |
 | 16 | 21 Apr | Branding. Plan rename. 4 crud_save bugs fixed. |
-| 17 | 22 Apr | Search block removed. Address button added. npt_company_addresses table created. company_address.php built. |
+| 17 | 22 Apr | Search block removed. Address button. npt_company_addresses table. |
+| 18 | 23 Apr | Full project entry workflow. project_address.php. Address connection. Company roles. Delete drafts. View/Publish/Delete logic. project.php full view. |
 
 ---
 
@@ -214,4 +271,6 @@ Basic credits: Coming Soon
 - Unpublish only from project view page
 - proj_industry NOT proj_sector
 - Delete SQL dumps immediately after import
-- company_address.php saves to npt_company_addresses — NOT npis_companies
+- company_address.php and ajax_save_address.php save to npt_company_addresses — NOT npis_companies
+- Only Repository projects can be published — not Drafts
+- Company cannot be changed after connecting to a project
