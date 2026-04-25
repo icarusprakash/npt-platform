@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 23 April 2026 (Day 18 — Session End)**
+**Last Updated: 25 April 2026 (Day 20 — Planning Session)**
 
 ---
 
@@ -22,7 +22,7 @@
 - **Stack:** AlmaLinux 9, CyberPanel, LiteSpeed, PHP 8.0, MariaDB
 - **DB:** newp_ai_engine
 - **DB User:** newp_npt_ai_user / npt_ai_user@123
-- **GitHub:** https://github.com/icarusprakash/npt-ai-engine
+- **GitHub:** https://github.com/icarusprakash/npt-platform
 
 ---
 
@@ -50,99 +50,63 @@
 
 ---
 
-## Day 18 — What Was Built
+## Day 19 — What Was Done
 
-### 1. Complete Project Entry Workflow (Final)
+### 1. crud.php — Form Restructured to Match Legacy Layout
+Field order now matches legacy NPT system:
+1. Project Name
+2. Synopsis
+3. Teaser
+4. Ownership + Project Type (side by side)
+5. Industry
+6. Production Capacity
+7. End Product
+8. Investment + Cost Range (side by side, cost range is auto/readonly)
+9. Expected Completion + Key Equipment (side by side)
+10. Project Stage
+11. Current Status
+12. Product Tags
+13. Full Project Details (with AI Populate button)
+14. CIN Number
+15. Location section (separate block): Location, District, Pincode, State, Region, Plant Address
 
-```
-Step 1: /admin/crud.php
-  - Search company in modal → connect existing OR add new (name only)
-  - Fill project details → Save New Project
+### 2. Bug Fix — saveAndConnectCompany
+JS function was trying to read deleted address fields (addr1, addr2, city etc.)
+Fixed to send empty strings for those fields — company name only saves correctly now.
 
-Step 2: /admin/project_address.php (auto-redirect after save)
-  - Shows connected company tab with ✓ tick when address connected
-  - Shows legacy address from npis_companies if no new address exists
-  - "Yes — Use This Address" → saves legacy as new record → auto-connects
-  - OR click "+ Add New Address" → fill form → save → auto-connects
-  - "+ Add Another Company" → search company → set role → connect
-  - Each company gets its own address tab
-  - "✓ Done — Move to Repository" → moves project to repository
+### 3. Cancel Button Fixed
+Was pointing to `/dashboard/admin/` — now correctly points to `/admin/projects.php`
 
-Step 3: /admin/projects.php?status=draft OR repository
-  - View button → /admin/project.php?id=X
-  - Delete button (draft only)
-  - Publish button (repository only)
-
-Step 4: /admin/project.php?id=X
-  - Full project view with all fields
-  - Quick Edit on every section
-  - Connected Address block
-  - Full Edit button → crud.php?edit=X
-```
-
-### 2. New Files Built
-
-| File | Purpose |
-|------|---------|
-| project_address.php | Step-by-step address connection screen |
-| ajax_save_address.php | AJAX handler — save new address + auto-connect |
-| ajax_update_comptype.php | AJAX handler — update company role in project |
-| delete_project.php | Delete draft projects (drafts only, never published) |
-
-### 3. crud.php Changes
-- "Add New Company" modal: removed address fields — company name only
-- "Change Company" button removed — company cannot be changed after connecting
-- "+ Connect Company" button hidden once company is connected
-- After new project save: redirects to `project_address.php` instead of `project.php`
-
-### 4. crud_save.php Changes
-- New project redirect → `/admin/project_address.php?proj_id=X`
-
-### 5. project.php Changes
-- **Teaser** added to Description view section
-- **End Product** and **Key Equipment** added to Investment & Capacity view section
-- **Connected Address** block added — shows all addresses from `npt_company_addresses`
-- Legacy address fallback — shows `npis_companies` address for old projects
-- All Quick Edit sections work for Draft, Repository, and Published projects
-
-### 6. projects.php Changes
-- **Edit** button renamed to **View**
-- **Publish** button shown only for Repository projects
-- **Delete** button shown only for Draft projects
-- Draft projects: View + Delete only
-- Repository projects: View + Publish + Delete
-- Published projects: View only
-
-### 7. project_address.php Features
-- Company tabs — click to switch between connected companies
-- Role dropdown (Promoter, EPC Contractor, Consultant etc.) — saves via AJAX
-- Legacy address display with "Yes — Use This Address" button
-- Existing address list with Connect / Edit buttons
-- Add New Address inline form
-- "+ Add Another Company" section with company search
-- Auto-connects new address to project on save
+### 4. Old Description Section Removed
+Duplicate Synopsis/Teaser/Details block (lines 415-440) removed — was causing double field submission risk.
 
 ---
 
-## Company Address System
+## Complete Project Entry Workflow (Final)
 
-### Tables
-- `npt_company_addresses` — stores all address records per company
-- `npis_refer.ref_address_id` — links specific address to project-company connection
+```
+Step 1: /admin/crud.php
+  - Search/connect company OR add new (name only)
+  - Fill all project fields in legacy order
+  - Save New Project → auto-redirects to project_address.php
 
-### Key Rules
-- One company can have multiple addresses
-- One project can have multiple companies (each with different role)
-- Same company can be Promoter in one project, EPC Contractor in another
-- Address type is per connection, not per address record
-- Legacy addresses in `npis_companies` are shown as fallback — never deleted
-- When "Yes — Use This Address" is clicked, legacy address is copied to `npt_company_addresses`
+Step 2: /admin/project_address.php
+  - Legacy address shown if available → "Yes — Use This Address"
+  - OR add new address → auto-connects
+  - Add another company if needed (EPC, Consultant etc.)
+  - "Done — Move to Repository" → project goes to Repository
 
-### Address Types
-Promoter, Corporate Office, Plant/Factory, Site Office, Regional Office, Consultant Office, EPC Contractor Office, Other
+Step 3: /admin/projects.php
+  - Draft: View + Delete
+  - Repository: View + Publish + Delete
+  - Published: View only
 
-### Company Roles per Project
-Promoter, Corporate Office, Plant/Factory, Regional Office, Consultant, EPC Contractor, Sub-Contractor, Financial Institution, Government Body, Other
+Step 4: /admin/project.php?id=X
+  - Full view of all fields
+  - Quick Edit on every section
+  - Connected Address block
+  - Full Edit button
+```
 
 ---
 
@@ -155,18 +119,18 @@ Promoter, Corporate Office, Plant/Factory, Regional Office, Consultant, EPC Cont
 | _layout.php | Sidebar |
 | _layout_end.php | Footer |
 | index.php | Dashboard |
-| projects.php | Projects list (View/Publish/Delete logic) |
-| project.php | Project view + Quick Edit (all fields) |
-| crud.php | Full entry/edit form |
-| crud_save.php | Save handler → redirects to project_address.php |
+| projects.php | Projects list |
+| project.php | Project view + Quick Edit |
+| crud.php | Full entry/edit form (restructured Day 19) |
+| crud_save.php | Save → redirects to project_address.php |
 | crud_search.php | AJAX project search |
 | crud_company_search.php | AJAX company search |
 | crud_add_company.php | AJAX add company (name only) |
-| project_address.php | ✅ NEW — Address connection screen |
-| company_address.php | Company address add/edit form |
-| ajax_save_address.php | ✅ NEW — AJAX address save |
-| ajax_update_comptype.php | ✅ NEW — AJAX company role update |
-| delete_project.php | ✅ NEW — Delete draft project |
+| project_address.php | Address connection screen |
+| company_address.php | Company address form |
+| ajax_save_address.php | AJAX address save |
+| ajax_update_comptype.php | AJAX company role update |
+| delete_project.php | Delete draft project |
 | qe_save.php | Quick Edit AJAX |
 | qe_milestone.php | Milestone AJAX |
 | repository.php | Repository bucket |
@@ -181,39 +145,199 @@ Promoter, Corporate Office, Plant/Factory, Regional Office, Consultant, EPC Cont
 
 ---
 
-## Backlog Entry Plan
-- ~75 projects piled up Apr 14–23 in legacy system
-- Recommendation: Manual entry (NOT SQL import)
-- Reason: New schema changes (address system, workflow logic) make direct import risky
-- Strategy: Enter today's 15 first to smooth workflow, then tackle backlog in batches
-- Legacy addresses will auto-show in project_address.php — staff clicks "Yes — Use This Address"
+## Company Address System
+- `npt_company_addresses` — address records per company
+- `npis_refer.ref_address_id` — links address to project-company connection
+- Legacy fallback: shows `npis_companies` address if no new record exists
+- "Yes — Use This Address" copies legacy to new table and connects
 
 ---
 
-## Critical Bug Fixes (Day 16) — crud_save.php
-1. Email whitelist blocking indscan saves — removed
+## Critical Bug Fixes Log
+### Day 16 — crud_save.php
+1. Email whitelist blocking indscan — removed
 2. Extra '$today' (41 vs 40 columns) — removed
 3. proj_recently_viewed DATE getting string — NULL
 4. npis_refer ref_ID missing — MAX+1 logic added
+
+### Day 19 — crud.php
+5. saveAndConnectCompany JS reading deleted fields — fixed to send empty strings
 
 ---
 
 ## Branding
 - Logo: `/assets/img/logo-orange.jpg` (public/subscriber), `/assets/img/logo-blue.jpg` (console)
-- Footer all pages: "A product of Kariyamangalam Technologies Pvt Ltd, Chennai · Built with Claude"
+- Footer: "A product of Kariyamangalam Technologies Pvt Ltd, Chennai · Built with Claude"
 - Sales: Ms. Kavitha Prakash — +91 91710 15659
 
 ---
 
 ## PLANNED FEATURE SPECS
 
-### Registration Redesign (Day 19+)
-Dependencies: Fast2SMS API key + npis_users SQL dump + WhatsApp number for paid activation
+---
 
-### Pricing & Payment Flow (Day 20+)
-- Starter: Razorpay (instant) + Offline + Tax invoice PDF
-- Premium: above + Formal quotation PDF route
-- Basic credits: Coming Soon teaser
+### SPEC 1 — Registration Redesign (Revised)
+
+**Dependencies:**
+- Fast2SMS API key (Jp to obtain)
+- `npis_users` SQL dump from GoDaddy VPS (DBA to export)
+- WhatsApp number for manual paid account activation message
+
+**Registration Flow:**
+```
+1. User fills registration form (name, email, mobile, company, designation, password)
+2. OTP sent to mobile via Fast2SMS
+3. OTP verified → account created (plan_type = 'basic', unactivated)
+4. Welcome splash screen shown
+5. Redirected to Pricing Plans page
+   - Basic (Free) → "Start Free — No credit card needed" → Activate Basic Plan
+   - Starter (₹14,950) → Razorpay checkout
+   - Premium (₹99,000) → Razorpay checkout
+6. User MUST activate Basic plan to access free projects (5/month)
+7. User can skip Basic and go directly to Starter or Premium
+```
+
+**Key UX note:** Basic plan button must say "Start Free — No credit card needed"
+to avoid confusion that it costs money.
+
+**Legacy Migration Lookup:**
+- On registration, check mobile against `npis_legacy_users`
+- If found + paid legacy user → show manual activation message with WhatsApp contact
+- If found + free legacy user → auto-migrate, show "Welcome back" message
+- If not found → fresh registration, proceed normally
+
+**DB Changes Needed:**
+- Add `phone_verified` TINYINT to `npt_users`
+- Add `plan_activated` TINYINT to `npt_users` (0 = registered but not activated)
+- Create `npt_otp_log` table: (id, mobile, otp, expires_at, verified, created_at)
+- Import legacy users as `npis_legacy_users` (read-only reference table)
+
+**Files to Build:**
+- `register.php` — 2-step form: mobile OTP → profile completion
+- `otp_send.php` — Fast2SMS API call
+- `otp_verify.php` — AJAX OTP verification
+- `dashboard/welcome.php` — splash screen / modal
+- `dashboard/pricing.php` — plan selection page (also used post-registration)
+
+**Console Flags:**
+- `source` field in `npt_users`: `self_register` / `migrated` / `admin`
+- Console shows badge: "New" or "Migrated" on user profile and list
+
+---
+
+### SPEC 2 — Pricing & Payment Flow
+
+- Starter: Razorpay + Offline + Tax invoice PDF
+- Premium: Razorpay + Formal quotation PDF + Tax invoice PDF
+- Basic: Activate button only (no payment)
+- Razorpay Key ID: rzp_live_D1cUKmkOav2Xx9
+- Razorpay Key Secret: **PENDING** (Jp to retrieve from Shopify vendor)
+
+---
+
+### SPEC 3 — Key Persons DB (Subscriber Dashboard)
+
+**What it is:**
+A searchable directory of key personnel (decision makers) associated with
+companies in the NPT database. Available to Starter and Premium subscribers only.
+
+**Legacy reference:** Key Persons Dashboard on newprojectstracker.com
+- Listing: Name, Designation, Location, State, Date
+- Detail page: Company Details + Contact Coordinates
+
+**New design:** NPT Intelligence style — upgraded from legacy
+- Listing page with filters: State, City, Designation type
+- Search by name or company
+- Detail page: person card + company block + contact block + linked projects
+- "Connected projects" section showing projects associated with their company
+
+**Data source:** PENDING — Jp to confirm table name with DBA
+(Likely a separate `npis_people` or `npis_persons` table)
+
+**Access:** Starter + Premium only (not Basic/free)
+
+**Files to Build (once table confirmed):**
+- `dashboard/keypersons.php` — listing + filters
+- `dashboard/keyperson.php?id=X` — detail page
+- `admin/keypersons.php` — admin list view (future)
+
+---
+
+### SPEC 4 — CapEx News Module
+
+**Three deliverables:**
+
+**A. Public News Magazine** (`newprojectstracker.in/capex-news/`)
+- Modern news/magazine UI, publicly accessible, SEO-optimised
+- Article listing: headline, sector tag, date, excerpt
+- Article detail: full content, social share (Facebook, Twitter, WhatsApp)
+- Right sidebar: Monthly Archive, Industry filter with counts, Company search
+- Clean URL structure: `/capex-news/{slug}`
+
+**B. Searchable News Archive (Subscriber Dashboard)**
+- Available to ALL users including Basic (free) — no credit consumption
+- Filters: keyword search, company name search, date range, sector/industry
+- Results list with headline, date, sector tag, excerpt → click to full article
+- Full article view within dashboard
+
+**C. News CRUD (NPT Admin Portal)**
+- Add / Edit / Delete news stories
+- Fields: Headline, Slug (auto-generated from headline), Sector, Date,
+  Excerpt, Full Content, Company link (from npis_companies)
+- Slug auto-generated on headline entry, editable manually
+- Company linkage: connects story to npis_companies record (new — not in legacy)
+
+**URL Strategy:**
+- New site URL: `newprojectstracker.in/capex-news/{slug}`
+- Legacy .com URLs redirect via 301 in .htaccess:
+  `RewriteRule ^capex-news/(.*)$ https://www.newprojectstracker.in/capex-news/$1 [R=301,L]`
+- Slugs must match legacy slugs exactly for seamless redirect
+- Check on `news.sql` import: if slugs already stored as column → import directly;
+  if generated from title on the fly → regenerate on import
+
+**Data source:** PENDING — Jp to share `news.sql` dump from legacy system
+
+**DB additions needed (once news.sql reviewed):**
+- Add `slug` column if not present
+- Add `company_id` column to link to `npis_companies`
+- Confirm sector/industry field name
+
+**Files to Build:**
+- `/capex-news/index.php` — public listing page
+- `/capex-news/article.php` — public article detail (slug-based routing via .htaccess)
+- `dashboard/news.php` — subscriber news archive with search/filters
+- `dashboard/news_article.php` — full article view inside dashboard
+- `admin/news.php` — news list in admin
+- `admin/news_crud.php` — add/edit news story
+- `admin/news_delete.php` — delete news story
+
+---
+
+## Next Tasks — Priority Order
+
+| # | Task | Dependencies | Status |
+|---|------|-------------|--------|
+| 1 | Test full project entry workflow with staff | Data entry operator | ⏳ Tomorrow |
+| 2 | Test Repository → Daily → Download → Flush | Staff test above | ⏳ Tomorrow |
+| 3 | **Key Persons DB** — dashboard listing + detail | DBA confirms table name | 🔲 Pending |
+| 4 | **CapEx News Module** — all three deliverables | news.sql dump from Jp | 🔲 Pending |
+| 5 | **Registration Redesign** — OTP + pricing page + activation flow | Fast2SMS key + npis_users dump | 🔲 Pending |
+| 6 | **Pricing & Payment Flow** — Razorpay + invoices | Razorpay key secret | 🔲 Pending |
+| 7 | **Orders Portal** — /orders/ | After payment flow | 🔲 Pending |
+| 8 | Client logos for homepage | Jp to provide | 🔲 Pending |
+
+---
+
+## Dependencies Checklist (Jp to Arrange)
+
+| Item | Needed For | Status |
+|------|-----------|--------|
+| Fast2SMS API key | Registration OTP | ⏳ Pending |
+| `npis_users` SQL dump (GoDaddy) | Legacy migration | ⏳ Pending |
+| WhatsApp number for paid migration message | Registration | ⏳ Pending |
+| Razorpay Key Secret | Payment flow | ⏳ Pending |
+| `news.sql` dump from legacy system | CapEx News module | ⏳ Pending |
+| Key Persons table name from DBA | Key Persons DB | ⏳ Pending |
 
 ---
 
@@ -222,31 +346,19 @@ Dependencies: Fast2SMS API key + npis_users SQL dump + WhatsApp number for paid 
 ### Core
 - `npis_projects` — 40,948+ rows
 - `npis_companies` — 36,695 rows
-- `npis_refer` — 50,845+ rows + ref_address_id ✅
-- `npt_company_addresses` — NEW ✅
+- `npis_refer` — 50,845+ rows + ref_address_id
+- `npt_company_addresses` ✅
 
 ### Platform
-- `npt_users` — basic/starter/premium
+- `npt_users` — plan_type: basic/starter/premium
 - `npt_admin_users`, `npt_console_users`
 - `npt_activity_log`, `npt_contact_forms`
 
-### Orders (TO CREATE)
-- `npt_quotations`, `npt_orders`, `npt_payments`, `npt_invoices`
-
----
-
-## Next Tasks (Priority Order)
-
-| # | Task |
-|---|------|
-| 1 | Enter today's projects through new workflow — test end to end |
-| 2 | Enter backlog Apr 14–23 in batches |
-| 3 | Test Repository → Daily → Download → Flush workflow |
-| 4 | Registration redesign (needs dependencies) |
-| 5 | Pricing & payment flow |
-| 6 | Orders Portal |
-| 7 | Watchlist trigger on new project save |
-| 8 | Client logos for homepage |
+### To Create
+- `npt_otp_log` — registration OTP verification
+- `npis_legacy_users` — imported from GoDaddy for migration lookup
+- `npt_news` — CapEx news stories (structure pending news.sql review)
+- `npt_quotations`, `npt_orders`, `npt_payments`, `npt_invoices` — Orders Portal
 
 ---
 
@@ -260,8 +372,10 @@ Dependencies: Fast2SMS API key + npis_users SQL dump + WhatsApp number for paid 
 | 14 | 19 Apr | Console. CIN. Companies. |
 | 15 | 20 Apr | Activity tracking. Public website. |
 | 16 | 21 Apr | Branding. Plan rename. 4 crud_save bugs fixed. |
-| 17 | 22 Apr | Search block removed. Address button. npt_company_addresses table. |
-| 18 | 23 Apr | Full project entry workflow. project_address.php. Address connection. Company roles. Delete drafts. View/Publish/Delete logic. project.php full view. |
+| 17 | 22 Apr | Address system foundation. npt_company_addresses table. |
+| 18 | 23 Apr | Full workflow. project_address.php. Delete drafts. |
+| 19 | 25 Apr | crud.php restructured to legacy layout. Cancel fix. Duplicate section removed. saveAndConnectCompany bug fixed. |
+| 20 | 25 Apr | Planning session. Specs drafted: Key Persons DB, CapEx News Module, Registration redesign revised (OTP + Basic activation flow). |
 
 ---
 
@@ -271,6 +385,6 @@ Dependencies: Fast2SMS API key + npis_users SQL dump + WhatsApp number for paid 
 - Unpublish only from project view page
 - proj_industry NOT proj_sector
 - Delete SQL dumps immediately after import
-- company_address.php and ajax_save_address.php save to npt_company_addresses — NOT npis_companies
 - Only Repository projects can be published — not Drafts
 - Company cannot be changed after connecting to a project
+- address saves go to npt_company_addresses — NOT npis_companies
