@@ -225,13 +225,130 @@ to avoid confusion that it costs money.
 
 ---
 
-### SPEC 2 — Pricing & Payment Flow
+### SPEC 2 — Pricing & Payment Flow (Detailed)
 
-- Starter: Razorpay + Offline + Tax invoice PDF
-- Premium: Razorpay + Formal quotation PDF + Tax invoice PDF
-- Basic: Activate button only (no payment)
-- Razorpay Key ID: rzp_live_D1cUKmkOav2Xx9
-- Razorpay Key Secret: **PENDING** (Jp to retrieve from Shopify vendor)
+**Razorpay Key ID:** rzp_live_D1cUKmkOav2Xx9
+**Razorpay Key Secret:** PENDING (Jp to retrieve from Shopify vendor)
+
+---
+
+#### Plan Positioning — Unlimited with Fair Use (IMPORTANT)
+- **Basic (Free):** Hard cap — 5 project views per month. Clearly shown as a limit.
+- **Starter:** Displayed as **"Unlimited\*"** — no cap shown to user.
+- **Premium:** Displayed as **"Unlimited\*"** — no cap shown to user.
+- Fine print on Starter and Premium cards: *"Fair usage policy applies."*
+- The current internal credit limits (400/month for Starter, 10,000/month for Premium)
+  are retained in the DB as fair use thresholds — NOT shown to users as caps.
+- If a user hits the fair use threshold, show a soft warning:
+  *"You've reached your fair usage limit for this month. Contact us if you need more."*
+- Rationale: Psychological — "Unlimited" removes the biggest objection at point of purchase.
+
+---
+
+#### Plan Summary Card (shown before any payment action)
+Each plan card on the pricing page must clearly show:
+- Basic: "5 project views per month"
+- Starter: "Unlimited project access\* · Monthly subscription"
+- Premium: "Unlimited project access\* · Annual subscription"
+- What is included vs not included (Key Persons, News, Downloads etc.)
+- Validity period
+- Fine print: \*Fair usage policy applies
+This is mandatory — shown before the user clicks any payment button.
+
+---
+
+#### Basic Plan (Free)
+```
+Pricing Page → "Start Free — No credit card needed" button
+→ One-click activation → plan_activated = 1
+→ Redirect to dashboard
+```
+
+---
+
+#### Paid Plans — Online Payment (Razorpay) — PLACEHOLDER FOR NOW
+```
+Pricing Page → "Pay Online" button (greyed out)
+Note below button: "Online payment coming soon. Use 'Pay Offline' option below."
+```
+Full Razorpay integration to be wired once Key Secret is available.
+Flow is designed and ready — button will go live without page redesign.
+
+---
+
+#### Paid Plans — Offline Payment Flow
+```
+Pricing Page → "Pay Offline / Get Quotation" button
+→ Warning shown:
+  "This is a manual process. Your account will be activated only after payment
+   is received and verified by our team. This may take 1–2 business days."
+→ User selects document type:
+   Option A — Formal Quotation (for corporate PO process)
+   Option B — Proforma Invoice (for direct bank transfer)
+→ Pre-filled form pulled from npt_users:
+   (Name, Company, GST Number, Billing Address — all editable. Phone locked.)
+   GST Number: optional here, mandatory only at tax invoice download stage.
+→ PDF generated (Quotation or Proforma) → downloadable immediately
+→ Offline payment instructions shown:
+   - Bank name, account number, IFSC
+   - NEFT / RTGS / UPI details
+   - Reference: auto-generated order code (e.g. NPT-2026-00142)
+→ "I have made the payment" button
+   → order status set to 'payment_pending'
+   → email notification sent to Kavitha Prakash (+91 91710 15659)
+→ User sees dashboard banner:
+  "Your payment is being verified. Expected activation: 1–2 business days.
+   Questions? WhatsApp Kavitha: +91 91710 15659"
+→ Sales team verifies payment → manually activates from Console
+→ User gets email confirmation + tax invoice link
+→ Tax invoice available in My Orders
+```
+
+---
+
+#### My Orders (inside subscriber dashboard — Profile section)
+- Lists all transactions: online + offline
+- Columns: Reference No, Date, Plan, Amount, Status, Documents
+- Status badges: Paid / Pending Verification / Activated / Expired
+- Download buttons per row: Tax Invoice / Quotation / Proforma Invoice
+- GST number required to download Tax Invoice (prompt if missing)
+
+---
+
+#### Console — Orders Management (for sales team)
+- Orders tab: lists all pending offline payments
+- Columns: User, Plan, Reference No, Document Type, Date Requested, Status
+- "Activate Account" button → sets plan_type, credits, validity dates
+- "Generate Tax Invoice" → GST-compliant PDF generated, linked to user's My Orders
+- Tax Invoice fields: Kariyamangalam Technologies GSTIN, HSN/SAC code for
+  software subscription, 18% GST line item, buyer GSTIN if provided
+
+---
+
+#### DB Tables for Orders
+- `npt_orders` — order reference, user_id, plan, amount, status, created_at
+- `npt_payments` — payment records (online/offline), linked to order
+- `npt_invoices` — invoice records, PDF path, linked to order
+- `npt_quotations` — quotation/proforma records, PDF path, linked to order
+
+---
+
+#### Files to Build
+| File | Purpose |
+|------|---------|
+| `dashboard/pricing.php` | Plan cards with summary + payment buttons |
+| `dashboard/checkout.php` | Pre-filled checkout form (phone locked) |
+| `dashboard/offline_payment.php` | Doc type selection + bank details + confirmation |
+| `dashboard/generate_doc.php` | Quotation / Proforma PDF via mPDF |
+| `dashboard/orders.php` | My Orders section |
+| `dashboard/invoice.php` | GST tax invoice PDF via mPDF |
+| `dashboard/pay.php` | Razorpay handler (placeholder → live when key ready) |
+| `webhook_razorpay.php` | Razorpay webhook (placeholder) |
+| `console/orders.php` | Orders management for sales team |
+| `console/activate.php` | Manual activation + invoice trigger |
+
+**Build order:** DB tables → pricing.php → checkout.php → offline flow →
+My Orders → Console orders tab → Console activation → Razorpay (last, needs key)
 
 ---
 
@@ -322,7 +439,7 @@ companies in the NPT database. Available to Starter and Premium subscribers only
 | 3 | **Key Persons DB** — dashboard listing + detail | DBA confirms table name | 🔲 Pending |
 | 4 | **CapEx News Module** — all three deliverables | news.sql dump from Jp | 🔲 Pending |
 | 5 | **Registration Redesign** — OTP + pricing page + activation flow | Fast2SMS key + npis_users dump | 🔲 Pending |
-| 6 | **Pricing & Payment Flow** — Razorpay + invoices | Razorpay key secret | 🔲 Pending |
+| 6 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation (Razorpay placeholder) | No blocker — build now | 🔲 Ready to build |
 | 7 | **Orders Portal** — /orders/ | After payment flow | 🔲 Pending |
 | 8 | Client logos for homepage | Jp to provide | 🔲 Pending |
 
@@ -375,7 +492,7 @@ companies in the NPT database. Available to Starter and Premium subscribers only
 | 17 | 22 Apr | Address system foundation. npt_company_addresses table. |
 | 18 | 23 Apr | Full workflow. project_address.php. Delete drafts. |
 | 19 | 25 Apr | crud.php restructured to legacy layout. Cancel fix. Duplicate section removed. saveAndConnectCompany bug fixed. |
-| 20 | 25 Apr | Planning session. Specs drafted: Key Persons DB, CapEx News Module, Registration redesign revised (OTP + Basic activation flow). |
+| 20 | 25–26 Apr | Planning session. Specs drafted: Key Persons DB, CapEx News Module, Registration redesign revised (OTP + Basic activation flow). Payment flow fully specced: offline flow, My Orders, Console orders + activation, Razorpay placeholder. |
 
 ---
 
