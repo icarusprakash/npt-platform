@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 27 April 2026 (Day 21)**
+**Last Updated: 27 April 2026 (Day 22)**
 
 ---
 
@@ -163,6 +163,12 @@ Step 4: /admin/project.php?id=X
 ### Day 21 — dashboard/_auth.php + admin/_layout.php
 6. `localhost` markdown corruption in mysqli calls — fixed via regex replace in both files
 7. `session_start()` missing from news.php and news_article.php — added
+
+### Day 22 — crud.php + crud_save.php + project_address.php
+8. Bug 1 — proj_takendate hardcoded to today on INSERT — now uses form value; visible date field added to crud.php
+9. Bug 2 — proj_updateddate updating on every edit — now only updates when proj_details or proj_stage changes
+10. Bug 4 — address save redirecting back to project_address.php — now redirects to project.php
+11. Bug 3 — phone field missing in address screen — PENDING (Jp to observe via AnyDesk)
 
 ---
 
@@ -353,33 +359,21 @@ My Orders → Console orders tab → Console activation → Razorpay (last, need
 
 ---
 
-### SPEC 3 — Key Persons DB (Subscriber Dashboard)
-
-**What it is:**
-A searchable directory of key personnel (decision makers) associated with
-companies in the NPT database. Available to Starter and Premium subscribers only.
-
-**Legacy reference:** Key Persons Dashboard on newprojectstracker.com
-- Listing: Name, Designation, Location, State, Date
-- Detail page: Company Details + Contact Coordinates
-
-**New design:** NPT Intelligence style — upgraded from legacy
-- Listing page with filters: State, City, Designation type
-- Search by name or company
-- Detail page: person card + company block + contact block + linked projects
-- "Connected projects" section showing projects associated with their company
+### SPEC 3 — Key Persons DB (Subscriber Dashboard) — ✅ LIVE
 
 **Data source:** Contact person fields inside `npis_companies` table
-(No separate people table — confirmed by DBA)
+- `comp_person1` / `comp_person2` — names
+- `comp_kpdesignation1` / `comp_kpdesignation2` — designations
+- `comp_kptitle1` / `comp_kptitle2` — titles (Mr/Ms/Dr)
+- `comp_tel1` / `comp_tel2` — direct numbers
+- `comp_email` / `comp_email2` — emails
+- 36,651 person1 records + 31,354 person2 records = ~68,000 total
 
-**Access:** Starter + Premium only (not Basic/free)
+**Access:** Starter + Premium only. Basic users see upgrade banner.
 
-**Next session:** Inspect `npis_companies` columns to identify contact person fields,
-then build listing + detail pages.
-
-**Files to Build:**
-- `dashboard/keypersons.php` — listing + filters
-- `dashboard/keyperson.php?id=X` — detail page
+**Files built:**
+- `dashboard/keypersons.php` — listing, card grid, 4 filters (name/company/desig, state, city, designation)
+- `dashboard/keyperson.php` — detail page with hero card, company details, contact, connected projects, sidebar
 
 ---
 
@@ -427,14 +421,13 @@ then build listing + detail pages.
 
 | # | Task | Dependencies | Status |
 |---|------|-------------|--------|
-| 1 | Test full project entry workflow with staff | Data entry operator | ⏳ Tomorrow |
-| 2 | Test Repository → Daily → Download → Flush | Staff test above | ⏳ Tomorrow |
-| 3 | **Key Persons DB** — dashboard listing + detail | DBA confirms table name | 🔲 Next session |
-| 4 | **CapEx News — Public Magazine** (`/capex-news/`) | Build next week | 🔲 Pending |
-| 5 | **Registration Redesign** — OTP + pricing page + activation flow | Fast2SMS key + npis_users dump | 🔲 Pending |
-| 6 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation (Razorpay placeholder) | No blocker — build now | 🔲 Ready to build |
-| 7 | **Orders Portal** — /orders/ | After payment flow | 🔲 Pending |
-| 8 | Client logos for homepage | Jp to provide | 🔲 Pending |
+| 1 | Bug 3 — Phone field missing in address screen | AnyDesk observation by Jp | ⏳ Pending |
+| 2 | Test full project entry workflow with staff | Data entry operator | ⏳ Pending |
+| 3 | **CapEx News — Public Magazine** (`/capex-news/`) | Build next week | 🔲 Pending |
+| 4 | **Registration Redesign** — OTP + pricing page + activation flow | Fast2SMS key + npis_users dump | 🔲 Pending |
+| 5 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation | No blocker | 🔲 Ready to build |
+| 6 | **Orders Portal** — /orders/ | After payment flow | 🔲 Pending |
+| 7 | Client logos for homepage | Jp to provide | 🔲 Pending |
 
 ---
 
@@ -489,6 +482,7 @@ then build listing + detail pages.
 | 19 | 25 Apr | crud.php restructured to legacy layout. Cancel fix. Duplicate section removed. saveAndConnectCompany bug fixed. |
 | 20 | 25–26 Apr | Planning session. Specs drafted: Key Persons DB, CapEx News Module, Registration redesign revised (OTP + Basic activation flow). Payment flow fully specced: offline flow, My Orders, Console orders + activation, Razorpay placeholder. |
 | 21 | 27 Apr | CapEx News module built. blog.sql imported (6,537 articles). dashboard/news.php + news_article.php live. Admin news.php + news_crud.php built with Quill editor. News Feed sidebar link activated. _auth.php localhost bug fixed. session_start() added to news pages. Migration messages drafted for legacy site, LinkedIn, Twitter. |
+| 22 | 27 Apr | Key Persons DB built. keypersons.php (30,299 persons, card grid, 4 filters) + keyperson.php (hero card, company details, contact, connected projects, sidebar) live. Sidebar link added. 4 crud bugs fixed: Bug 1 — backdated proj_takendate now uses form value + visible date field added. Bug 2 — proj_updateddate now only updates on proj_details/proj_stage change. Bug 4 — address save now redirects to project.php. Bug 3 (phone field) — pending AnyDesk observation. |
 
 ---
 
