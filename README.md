@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 25 April 2026 (Day 20 — Planning Session)**
+**Last Updated: 27 April 2026 (Day 21)**
 
 ---
 
@@ -160,8 +160,9 @@ Step 4: /admin/project.php?id=X
 3. proj_recently_viewed DATE getting string — NULL
 4. npis_refer ref_ID missing — MAX+1 logic added
 
-### Day 19 — crud.php
-5. saveAndConnectCompany JS reading deleted fields — fixed to send empty strings
+### Day 21 — dashboard/_auth.php + admin/_layout.php
+6. `localhost` markdown corruption in mysqli calls — fixed via regex replace in both files
+7. `session_start()` missing from news.php and news_article.php — added
 
 ---
 
@@ -368,15 +369,17 @@ companies in the NPT database. Available to Starter and Premium subscribers only
 - Detail page: person card + company block + contact block + linked projects
 - "Connected projects" section showing projects associated with their company
 
-**Data source:** PENDING — Jp to confirm table name with DBA
-(Likely a separate `npis_people` or `npis_persons` table)
+**Data source:** Contact person fields inside `npis_companies` table
+(No separate people table — confirmed by DBA)
 
 **Access:** Starter + Premium only (not Basic/free)
 
-**Files to Build (once table confirmed):**
+**Next session:** Inspect `npis_companies` columns to identify contact person fields,
+then build listing + detail pages.
+
+**Files to Build:**
 - `dashboard/keypersons.php` — listing + filters
 - `dashboard/keyperson.php?id=X` — detail page
-- `admin/keypersons.php` — admin list view (future)
 
 ---
 
@@ -384,49 +387,39 @@ companies in the NPT database. Available to Starter and Premium subscribers only
 
 **Three deliverables:**
 
-**A. Public News Magazine** (`newprojectstracker.in/capex-news/`)
+**A. Public News Magazine** (`newprojectstracker.in/capex-news/`) — 🔲 Build next week
 - Modern news/magazine UI, publicly accessible, SEO-optimised
-- Article listing: headline, sector tag, date, excerpt
-- Article detail: full content, social share (Facebook, Twitter, WhatsApp)
+- New stories only (from new admin CRUD, starting this week)
+- Public sees excerpt only — "Login to read full story" for non-logged-in visitors
+- Full archive available inside subscriber dashboard (free for Basic users)
+- Pop-up notice on new public page explaining move from legacy site (plain message, no redirects)
 - Right sidebar: Monthly Archive, Industry filter with counts, Company search
 - Clean URL structure: `/capex-news/{slug}`
 
-**B. Searchable News Archive (Subscriber Dashboard)**
+**B. Searchable News Archive (Subscriber Dashboard)** — ✅ LIVE
+- `dashboard/news.php` — listing with keyword, industry, company, date filters
+- `dashboard/news_article.php` — full article view with related sidebar
 - Available to ALL users including Basic (free) — no credit consumption
-- Filters: keyword search, company name search, date range, sector/industry
-- Results list with headline, date, sector tag, excerpt → click to full article
-- Full article view within dashboard
+- 6,537 articles imported from legacy blog.sql
 
-**C. News CRUD (NPT Admin Portal)**
-- Add / Edit / Delete news stories
-- Fields: Headline, Slug (auto-generated from headline), Sector, Date,
-  Excerpt, Full Content, Company link (from npis_companies)
-- Slug auto-generated on headline entry, editable manually
-- Company linkage: connects story to npis_companies record (new — not in legacy)
+**C. News CRUD (NPT Admin Portal)** — ✅ LIVE
+- `admin/news.php` — all articles listing with search + delete
+- `admin/news_crud.php` — add/edit with Quill rich text editor
+- Auto-slug generation from headline
+- Sidebar link added under CapEx News section
+
+**Legacy Migration Status:**
+- Post transition message on legacy site, LinkedIn, Twitter (messages drafted — ready to post)
+- Stop new entries in legacy admin after transition message
+- New entries go only into new admin CRUD from this week
 
 **URL Strategy:**
 - New site URL: `newprojectstracker.in/capex-news/{slug}`
-- Legacy .com URLs redirect via 301 in .htaccess:
-  `RewriteRule ^capex-news/(.*)$ https://www.newprojectstracker.in/capex-news/$1 [R=301,L]`
-- Slugs must match legacy slugs exactly for seamless redirect
-- Check on `news.sql` import: if slugs already stored as column → import directly;
-  if generated from title on the fly → regenerate on import
+- No programmatic redirects — plain human message on new site explaining the move
+- Slugs already stored in blog table — imported as-is
 
-**Data source:** PENDING — Jp to share `news.sql` dump from legacy system
-
-**DB additions needed (once news.sql reviewed):**
-- Add `slug` column if not present
-- Add `company_id` column to link to `npis_companies`
-- Confirm sector/industry field name
-
-**Files to Build:**
-- `/capex-news/index.php` — public listing page
-- `/capex-news/article.php` — public article detail (slug-based routing via .htaccess)
-- `dashboard/news.php` — subscriber news archive with search/filters
-- `dashboard/news_article.php` — full article view inside dashboard
-- `admin/news.php` — news list in admin
-- `admin/news_crud.php` — add/edit news story
-- `admin/news_delete.php` — delete news story
+**Known issue to fix:**
+- `&apos;` HTML entities showing in article sidebar titles — fix with `html_entity_decode()`
 
 ---
 
@@ -436,8 +429,8 @@ companies in the NPT database. Available to Starter and Premium subscribers only
 |---|------|-------------|--------|
 | 1 | Test full project entry workflow with staff | Data entry operator | ⏳ Tomorrow |
 | 2 | Test Repository → Daily → Download → Flush | Staff test above | ⏳ Tomorrow |
-| 3 | **Key Persons DB** — dashboard listing + detail | DBA confirms table name | 🔲 Pending |
-| 4 | **CapEx News Module** — all three deliverables | news.sql dump from Jp | 🔲 Pending |
+| 3 | **Key Persons DB** — dashboard listing + detail | DBA confirms table name | 🔲 Next session |
+| 4 | **CapEx News — Public Magazine** (`/capex-news/`) | Build next week | 🔲 Pending |
 | 5 | **Registration Redesign** — OTP + pricing page + activation flow | Fast2SMS key + npis_users dump | 🔲 Pending |
 | 6 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation (Razorpay placeholder) | No blocker — build now | 🔲 Ready to build |
 | 7 | **Orders Portal** — /orders/ | After payment flow | 🔲 Pending |
@@ -474,8 +467,10 @@ companies in the NPT database. Available to Starter and Premium subscribers only
 ### To Create
 - `npt_otp_log` — registration OTP verification
 - `npis_legacy_users` — imported from GoDaddy for migration lookup
-- `npt_news` — CapEx news stories (structure pending news.sql review)
 - `npt_quotations`, `npt_orders`, `npt_payments`, `npt_invoices` — Orders Portal
+
+### Imported
+- `blog` — 6,537 CapEx news articles (imported 27 Apr 2026)
 
 ---
 
@@ -493,6 +488,7 @@ companies in the NPT database. Available to Starter and Premium subscribers only
 | 18 | 23 Apr | Full workflow. project_address.php. Delete drafts. |
 | 19 | 25 Apr | crud.php restructured to legacy layout. Cancel fix. Duplicate section removed. saveAndConnectCompany bug fixed. |
 | 20 | 25–26 Apr | Planning session. Specs drafted: Key Persons DB, CapEx News Module, Registration redesign revised (OTP + Basic activation flow). Payment flow fully specced: offline flow, My Orders, Console orders + activation, Razorpay placeholder. |
+| 21 | 27 Apr | CapEx News module built. blog.sql imported (6,537 articles). dashboard/news.php + news_article.php live. Admin news.php + news_crud.php built with Quill editor. News Feed sidebar link activated. _auth.php localhost bug fixed. session_start() added to news pages. Migration messages drafted for legacy site, LinkedIn, Twitter. |
 
 ---
 
