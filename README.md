@@ -417,17 +417,49 @@ My Orders → Console orders tab → Console activation → Razorpay (last, need
 
 ---
 
-## Next Tasks — Priority Order
+### SPEC 5 — Access Control Rules (Inline Upgrade Banners)
+
+**Rule table:**
+
+| Section | Basic (Free) | Starter | Premium |
+|---------|-------------|---------|---------|
+| Projects — Page 1 | ✅ Listing | ✅ Listing | ✅ Listing |
+| Projects — Pages 2–40 | ❌ Inline banner | ✅ Listing | ✅ Listing |
+| Projects — Pages 41+ | ❌ Inline banner | ❌ Inline banner | ✅ Listing |
+| Projects — Detail | ✅ If credits available | ✅ If credits available | ✅ Unlimited* |
+| Promoters DB — Any page | ❌ Inline banner | ❌ Inline banner | ✅ |
+| Promoters DB — Detail | ❌ Inline banner | ❌ Inline banner | ✅ |
+| Key Contacts — Any page | ❌ Inline banner | ❌ Inline banner | ✅ |
+| Key Contacts — Detail | ❌ Inline banner | ❌ Inline banner | ✅ |
+| CapEx News | ✅ All users | ✅ All users | ✅ All users |
+
+**Inline banner design:**
+- Shown instead of results (not over them)
+- Navy gradient banner with lock icon
+- Message: "Upgrade to [Starter/Premium] to continue browsing"
+- Two buttons: "View Pricing Plans" and "Request a Quote"
+- Shows what they are missing (e.g. "Access 40,000+ projects across all pages")
+- Never redirects — stays on same page
+
+**Implementation:**
+- Check in `projects.php`: if page > 1 && basic → show banner; if page > 40 && starter → show banner
+- Check in `companies.php`: if basic or starter → show banner on page load
+- Check in `keypersons.php`: if basic or starter → show banner on page load
+- Detail pages: existing credit gate handles project.php; add plan check to company.php and keyperson.php
 
 | # | Task | Dependencies | Status |
 |---|------|-------------|--------|
-| 1 | Bug 3 — Phone field missing in address screen | AnyDesk observation by Jp | ⏳ Pending |
-| 2 | Test full project entry workflow with staff | Data entry operator | ⏳ Pending |
-| 3 | **CapEx News — Public Magazine** (`/capex-news/`) | Build next week | 🔲 Pending |
-| 4 | **Registration Redesign** — OTP + pricing page + activation flow | Fast2SMS key + npis_users dump | 🔲 Pending |
-| 5 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation | No blocker | 🔲 Ready to build |
-| 6 | **Orders Portal** — /orders/ | After payment flow | 🔲 Pending |
-| 7 | Client logos for homepage | Jp to provide | 🔲 Pending |
+| 1 | **Access control rules** — inline upgrade banners on Projects/Companies/KeyPersons | No blocker | 🔲 Ready |
+| 2 | Bug 3 — Phone field missing in address screen | AnyDesk observation | ⏳ Pending |
+| 3 | **Dashboard home page redesign** — teaser cards, infographics, welcome banner | No blocker | 🔲 Ready |
+| 4 | **Book a Demo form** | No blocker | 🔲 Ready |
+| 5 | **Request for Quote standalone form** | No blocker | 🔲 Ready |
+| 6 | **Downloads section** — admin upload + user download | No blocker | 🔲 Ready |
+| 7 | **CapEx News — Public Magazine** (`/capex-news/`) | No blocker | 🔲 Ready |
+| 8 | **Registration Redesign** — OTP + pricing page + activation flow | Fast2SMS key + npis_users dump | 🔲 Pending |
+| 9 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation | No blocker | 🔲 Ready |
+| 10 | **Orders Portal** — /orders/ | After payment flow | 🔲 Pending |
+| 11 | Client logos for homepage | Jp to provide | 🔲 Pending |
 
 ---
 
@@ -482,7 +514,7 @@ My Orders → Console orders tab → Console activation → Razorpay (last, need
 | 19 | 25 Apr | crud.php restructured to legacy layout. Cancel fix. Duplicate section removed. saveAndConnectCompany bug fixed. |
 | 20 | 25–26 Apr | Planning session. Specs drafted: Key Persons DB, CapEx News Module, Registration redesign revised (OTP + Basic activation flow). Payment flow fully specced: offline flow, My Orders, Console orders + activation, Razorpay placeholder. |
 | 21 | 27 Apr | CapEx News module built. blog.sql imported (6,537 articles). dashboard/news.php + news_article.php live. Admin news.php + news_crud.php built with Quill editor. News Feed sidebar link activated. _auth.php localhost bug fixed. session_start() added to news pages. Migration messages drafted for legacy site, LinkedIn, Twitter. |
-| 22 | 27 Apr | Key Persons DB built. keypersons.php (30,299 persons, card grid, 4 filters) + keyperson.php (hero card, company details, contact, connected projects, sidebar) live. Sidebar link added. 4 crud bugs fixed: Bug 1 — backdated proj_takendate now uses form value + visible date field added. Bug 2 — proj_updateddate now only updates on proj_details/proj_stage change. Bug 4 — address save now redirects to project.php. Bug 3 (phone field) — pending AnyDesk observation. |
+| 23 | 28 Apr | Full sidebar redesign with collapsible sections. coming_soon.php with full content for About, History, Terms, Refund, Plan Compare, FAQ, Payment Methods. Legacy Welcome + FAQ pages. Project Hat Tip form + admin hattips.php. Projects/Companies/KeyPersons table+card toggle. Card view redesigned (IIG style, 3-col portrait). Project detail banner shows company name instead of investment. Access control rules defined. |
 
 ---
 
