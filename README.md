@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 27 April 2026 (Day 22)**
+**Last Updated: 28 April 2026 (Day 23)**
 
 ---
 
@@ -447,19 +447,61 @@ My Orders → Console orders tab → Console activation → Razorpay (last, need
 - Check in `keypersons.php`: if basic or starter → show banner on page load
 - Detail pages: existing credit gate handles project.php; add plan check to company.php and keyperson.php
 
-| # | Task | Dependencies | Status |
-|---|------|-------------|--------|
-| 1 | **Access control rules** — inline upgrade banners on Projects/Companies/KeyPersons | No blocker | 🔲 Ready |
-| 2 | Bug 3 — Phone field missing in address screen | AnyDesk observation | ⏳ Pending |
-| 3 | **Dashboard home page redesign** — teaser cards, infographics, welcome banner | No blocker | 🔲 Ready |
-| 4 | **Book a Demo form** | No blocker | 🔲 Ready |
-| 5 | **Request for Quote standalone form** | No blocker | 🔲 Ready |
-| 6 | **Downloads section** — admin upload + user download | No blocker | 🔲 Ready |
-| 7 | **CapEx News — Public Magazine** (`/capex-news/`) | No blocker | 🔲 Ready |
-| 8 | **Registration Redesign** — OTP + pricing page + activation flow | Fast2SMS key + npis_users dump | 🔲 Pending |
-| 9 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation | No blocker | 🔲 Ready |
-| 10 | **Orders Portal** — /orders/ | After payment flow | 🔲 Pending |
-| 11 | Client logos for homepage | Jp to provide | 🔲 Pending |
+---
+
+### SPEC 6 — AI Enrichment Pipeline (Post-Launch)
+
+**What it does:**
+Bulk enrichment of existing project records using Claude API. Many records have sparse
+data — short synopsis, missing teaser, thin proj_details. Claude will read the raw
+project data and generate structured, readable content for missing fields.
+
+**Fields to enrich:**
+- `proj_synopsis` — one-line summary if missing or too short
+- `proj_teaser` — 2-3 sentence teaser for dashboard listing
+- `proj_details` — full structured project description
+
+**Implementation plan:**
+- Python script: `nptcleaner/enrich_projects.py`
+- Reads unpopulated or thin records from `npis_projects` in batches of 50
+- Calls `claude-sonnet-4-6` via Anthropic API for each batch
+- Writes enriched content back to DB
+- Logs enriched project IDs to avoid re-processing
+- Rate limited to stay within API budget
+
+**Budget:** ~$280 Anthropic API credits for ~40,000 project records
+
+**Admin hook:** "AI Populate" button already exists in `admin/crud.php` as a stub.
+This will be wired to the same enrichment logic for single-record use.
+
+**Trigger:** Run after platform launch is stable and subscriber base is onboarded.
+Do not run before launch — enrichment is a background data quality task.
+
+---
+
+## PENDING CONTENT FROM JP
+
+| Item | Needed For | Status |
+|------|-----------|--------|
+| Bank name, account number, IFSC, UPI ID | Payment Methods page + offline payment flow | ⏳ Pending |
+| GSTIN of Kariyamangalam Technologies | Tax invoice generator | ⏳ Pending |
+| HSN/SAC code for software subscription | Tax invoice | ⏳ Pending |
+| Client logos (image files) | Our Clients page | ⏳ Pending |
+| Sales Tools intro text (PitchOS, Tender Summarizer, Vendor Reg, Custom Tools) | Coming Soon pages | ⏳ Pending |
+| 2 | **Book a Demo form** | No blocker | 🔲 Ready |
+| 3 | **Request for Quote standalone form** | No blocker | 🔲 Ready |
+| 4 | **Downloads section** — admin upload + user download | No blocker | 🔲 Ready |
+| 5 | **CapEx News — Public Magazine** (`/capex-news/`) | No blocker | 🔲 Ready |
+| 6 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation | No blocker | 🔲 Ready |
+| 7 | **My Profile page** — edit details, change password, My Orders | No blocker | 🔲 Ready |
+| 8 | **Registration Redesign** — OTP + pricing page + activation flow | Fast2SMS key + npis_users dump | ⏳ Pending deps |
+| 9 | **Orders Portal** — /orders/ | After payment flow | 🔲 Pending |
+| 10 | **AI Enrichment Pipeline** — bulk project data enrichment via Claude API | ~$280 Anthropic credits | 🔲 Post-launch |
+| 11 | Bug 3 — Phone field missing in address screen | AnyDesk observation | ⏳ Pending |
+| 12 | Fix `&apos;` entities in CapEx News article sidebar | No blocker | 🔲 Ready |
+| 13 | Client logos for homepage | Jp to provide logos | ⏳ Pending |
+| 14 | Bank details for Payment Methods page | Jp to provide | ⏳ Pending |
+| 15 | GSTIN + HSN/SAC code for tax invoices | Jp to provide | ⏳ Pending |
 
 ---
 
@@ -469,10 +511,8 @@ My Orders → Console orders tab → Console activation → Razorpay (last, need
 |------|-----------|--------|
 | Fast2SMS API key | Registration OTP | ⏳ Pending |
 | `npis_users` SQL dump (GoDaddy) | Legacy migration | ⏳ Pending |
-| WhatsApp number for paid migration message | Registration | ⏳ Pending |
 | Razorpay Key Secret | Payment flow | ⏳ Pending |
-| `news.sql` dump from legacy system | CapEx News module | ⏳ Pending |
-| Key Persons table name from DBA | Key Persons DB | ⏳ Pending |
+| ~$280 Anthropic API credits | AI Enrichment pipeline | 🔲 Post-launch |
 
 ---
 
@@ -493,6 +533,9 @@ My Orders → Console orders tab → Console activation → Razorpay (last, need
 - `npt_otp_log` — registration OTP verification
 - `npis_legacy_users` — imported from GoDaddy for migration lookup
 - `npt_quotations`, `npt_orders`, `npt_payments`, `npt_invoices` — Orders Portal
+- `npt_downloads` — admin-uploaded reports for Downloads section
+- `npt_demo_requests` — Book a Demo form submissions
+- `npt_rfq` — Request for Quote form submissions
 
 ### Imported
 - `blog` — 6,537 CapEx news articles (imported 27 Apr 2026)
@@ -514,7 +557,7 @@ My Orders → Console orders tab → Console activation → Razorpay (last, need
 | 19 | 25 Apr | crud.php restructured to legacy layout. Cancel fix. Duplicate section removed. saveAndConnectCompany bug fixed. |
 | 20 | 25–26 Apr | Planning session. Specs drafted: Key Persons DB, CapEx News Module, Registration redesign revised (OTP + Basic activation flow). Payment flow fully specced: offline flow, My Orders, Console orders + activation, Razorpay placeholder. |
 | 21 | 27 Apr | CapEx News module built. blog.sql imported (6,537 articles). dashboard/news.php + news_article.php live. Admin news.php + news_crud.php built with Quill editor. News Feed sidebar link activated. _auth.php localhost bug fixed. session_start() added to news pages. Migration messages drafted for legacy site, LinkedIn, Twitter. |
-| 23 | 28 Apr | Full sidebar redesign with collapsible sections. coming_soon.php with full content for About, History, Terms, Refund, Plan Compare, FAQ, Payment Methods. Legacy Welcome + FAQ pages. Project Hat Tip form + admin hattips.php. Projects/Companies/KeyPersons table+card toggle. Card view redesigned (IIG style, 3-col portrait). Project detail banner shows company name instead of investment. Access control rules defined. |
+| 23 | 28 Apr | Full sidebar redesign with collapsible sections. coming_soon.php with full content for About, History, Terms, Refund, Plan Compare, FAQ, Payment Methods. Legacy Welcome + FAQ pages. Project Hat Tip form + admin hattips.php. Projects/Companies/KeyPersons table+card toggle. Card view redesigned (IIG style, 3-col portrait). Project detail banner shows company name. Access control rules defined. Dashboard home page redesigned (DB teaser cards, industry bars, top states, recent activity, latest news). fmt_cost updated globally to show actual cost in Mn. Pricing page rebuilt with new sidebar. |
 
 ---
 
