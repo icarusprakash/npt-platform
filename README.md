@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 28 April 2026 (Day 23)**
+**Last Updated: 29 April 2026 (Day 24)**
 
 ---
 
@@ -449,7 +449,118 @@ My Orders → Console orders tab → Console activation → Razorpay (last, need
 
 ---
 
-### SPEC 6 — AI Enrichment Pipeline (Post-Launch)
+## LAUNCH STRATEGY — Decided 29 April 2026
+
+### Two-Phase Plan
+
+---
+
+#### Phase 1 — Closed Beta (Now → June 30, 2026)
+
+**Who can access the new site:**
+- Only manually migrated paid legacy users (120 users)
+- No public registration — anyone who lands on the site sees a closed beta message
+- Legacy free users (25k+) stay on old site completely — no knowledge of new site
+- No links to newprojectstracker.in from the public website or anywhere
+
+**How migrated users are identified:**
+- `npt_users.source = 'migrated'` — set manually when adding via Console
+- Migrated users get `plan_type = 'premium'` or `plan_type = 'starter'` as appropriate
+- Custom plan users (state/industry restricted) — set `state_access` and `industry_access` fields
+
+**Experience for migrated users:**
+- Pricing Plans page — completely hidden from sidebar
+- No upgrade banners anywhere on the dashboard
+- No "Soon" prompts related to pricing or plans
+- Welcome message on dashboard explaining the complimentary access
+- Clear messaging: legacy subscription continues unchanged, this is a free bonus
+- Contact details for support: Kavitha +91 91710 15659
+
+**Experience for non-migrated visitors:**
+- `/register` shows closed beta page — not a registration form
+- `/login` works normally (for migrated users who have credentials)
+- Closed beta page message: "NPT Intelligence is currently in private beta for existing NPT subscribers. If you are an NPT subscriber, please contact us to get access."
+- No public-facing marketing content on new site during this period
+
+**Legacy site (newprojectstracker.com) — NO CHANGES:**
+- Public website stays exactly as is
+- Legacy dashboard stays exactly as is
+- Free users continue using legacy dashboard
+- No links added to newprojectstracker.in anywhere
+- New subscriptions still accepted on legacy site during this period
+
+**Goal of Phase 1:**
+- Get real feedback from 120 actual users
+- Stabilise the platform
+- Complete remaining features
+- Decide public launch strategy with confidence
+
+---
+
+#### Phase 2 — Public Launch (July 1, 2026 — Decision Point)
+
+By June 30, review feedback and decide:
+- Open public registration on new site
+- Change CTA on legacy public website to point to new site
+- Stop accepting new subscriptions on legacy site
+- All renewals and new sales through new site only
+- Legacy dashboard shows migration notice
+
+*Detailed Phase 2 plan to be drafted closer to June 30.*
+
+---
+
+### Build Tasks for Beta Launch (Priority Order)
+
+| # | Task | What it does | Status |
+|---|------|-------------|--------|
+| 1 | **Closed beta page** — `/register` | Non-migrated visitors see beta message instead of registration form | 🔲 Build next |
+| 2 | **Migrated user experience** — hide pricing | If `source = 'migrated'`, remove Subscription section from sidebar, hide all upgrade prompts | 🔲 Build next |
+| 3 | **Welcome message for migrated users** | Dismissible banner explaining complimentary access, legacy subscription continues | 🔲 Build next |
+| 4 | **Console — user addition** | Ensure Console allows setting source=migrated, state_access, industry_access when adding users | 🔲 Check/fix |
+| 5 | **Downloads section** | Daily PDF + Weekly Excel + Special Reports (last 5 each) | 🔲 Ready |
+| 6 | **Book a Demo form** | Collect demo requests | 🔲 Ready |
+| 7 | **Request for Quote form** | Standalone RFQ form | 🔲 Ready |
+| 8 | **Access control banners** | Inline upgrade prompts for non-migrated users on Projects/Companies/KeyPersons | 🔲 Ready |
+| 9 | **My Profile page** | Edit details, change password, My Orders | 🔲 Ready |
+| 10 | **Fix &apos; entities in news sidebar** | html_entity_decode() fix | 🔲 Quick fix |
+
+---
+
+### Migrated User Rules (Technical)
+
+**Sidebar — hide for `source = 'migrated'`:**
+- Entire Subscription section (Pricing Plans, Payment Methods, RFQ, Book a Demo)
+- No upgrade banners in credit bar or elsewhere
+
+**Welcome banner — show for `source = 'migrated'` only:**
+- Show once per session (or until dismissed via cookie)
+- Message: "Welcome to NPT Intelligence — complimentary access for NPT subscribers"
+- Sub-text: "Your existing NPT subscription continues unchanged. This platform is available to you as a bonus service. Use both platforms freely until further notice."
+- Contact line: "Questions? WhatsApp Kavitha: +91 91710 15659"
+
+**Dashboard credit bar — hide for `source = 'migrated'`:**
+- No credit countdown shown
+- No "X of Y views remaining" message
+
+**Pricing page (`/dashboard/pricing.php`) — redirect for `source = 'migrated'`:**
+- If migrated user somehow navigates to pricing.php → redirect to dashboard with a message
+
+---
+
+### Console — Adding Migrated Users
+
+When adding a legacy paid user to the new site via Console:
+- Set `source = 'migrated'`
+- Set `plan_type = 'premium'` (or 'starter' depending on their legacy plan)
+- Set `plan_status = 'active'`
+- Set `state_access` = their legacy state restriction (or 'all')
+- Set `industry_access` = their legacy industry restriction (or 'all')
+- Set `credits_monthly = 99999` (effectively unlimited for migrated users)
+- No OTP required — admin creates account directly
+- Send credentials to user manually (Kavitha does this)
+
+---
 
 **What it does:**
 Bulk enrichment of existing project records using Claude API. Many records have sparse
@@ -558,6 +669,7 @@ Do not run before launch — enrichment is a background data quality task.
 | 20 | 25–26 Apr | Planning session. Specs drafted: Key Persons DB, CapEx News Module, Registration redesign revised (OTP + Basic activation flow). Payment flow fully specced: offline flow, My Orders, Console orders + activation, Razorpay placeholder. |
 | 21 | 27 Apr | CapEx News module built. blog.sql imported (6,537 articles). dashboard/news.php + news_article.php live. Admin news.php + news_crud.php built with Quill editor. News Feed sidebar link activated. _auth.php localhost bug fixed. session_start() added to news pages. Migration messages drafted for legacy site, LinkedIn, Twitter. |
 | 23 | 28 Apr | Full sidebar redesign with collapsible sections. coming_soon.php with full content for About, History, Terms, Refund, Plan Compare, FAQ, Payment Methods. Legacy Welcome + FAQ pages. Project Hat Tip form + admin hattips.php. Projects/Companies/KeyPersons table+card toggle. Card view redesigned (IIG style, 3-col portrait). Project detail banner shows company name. Access control rules defined. Dashboard home page redesigned (DB teaser cards, industry bars, top states, recent activity, latest news). fmt_cost updated globally to show actual cost in Mn. Pricing page rebuilt with new sidebar. |
+| 24 | 29 Apr | Launch strategy finalised. Two-phase plan: Closed Beta (now→Jun 30) for 120 paid legacy users only, Public Launch decision point July 1. Migrated user experience spec written. Closed beta page spec written. Build priority reordered around beta launch. |
 
 ---
 
