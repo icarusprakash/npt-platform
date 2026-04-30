@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 29 April 2026 (Day 24)**
+**Last Updated: 30 April 2026 (Day 25)**
 
 ---
 
@@ -599,20 +599,30 @@ Do not run before launch — enrichment is a background data quality task.
 | HSN/SAC code for software subscription | Tax invoice | ⏳ Pending |
 | Client logos (image files) | Our Clients page | ⏳ Pending |
 | Sales Tools intro text (PitchOS, Tender Summarizer, Vendor Reg, Custom Tools) | Coming Soon pages | ⏳ Pending |
-| 2 | **Book a Demo form** | No blocker | 🔲 Ready |
-| 3 | **Request for Quote standalone form** | No blocker | 🔲 Ready |
-| 4 | **Downloads section** — admin upload + user download | No blocker | 🔲 Ready |
-| 5 | **CapEx News — Public Magazine** (`/capex-news/`) | No blocker | 🔲 Ready |
-| 6 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation | No blocker | 🔲 Ready |
-| 7 | **My Profile page** — edit details, change password, My Orders | No blocker | 🔲 Ready |
-| 8 | **Registration Redesign** — OTP + pricing page + activation flow | Fast2SMS key + npis_users dump | ⏳ Pending deps |
-| 9 | **Orders Portal** — /orders/ | After payment flow | 🔲 Pending |
-| 10 | **AI Enrichment Pipeline** — bulk project data enrichment via Claude API | ~$280 Anthropic credits | 🔲 Post-launch |
-| 11 | Bug 3 — Phone field missing in address screen | AnyDesk observation | ⏳ Pending |
-| 12 | Fix `&apos;` entities in CapEx News article sidebar | No blocker | 🔲 Ready |
-| 13 | Client logos for homepage | Jp to provide logos | ⏳ Pending |
-| 14 | Bank details for Payment Methods page | Jp to provide | ⏳ Pending |
-| 15 | GSTIN + HSN/SAC code for tax invoices | Jp to provide | ⏳ Pending |
+
+---
+
+## Next Tasks — Priority Order
+
+| # | Task | Dependencies | Status |
+|---|------|-------------|--------|
+| 1 | Closed beta page — /register | No blocker | ✅ Done |
+| 2 | Migrated user experience — hide pricing + upgrade prompts | No blocker | ✅ Done |
+| 3 | Welcome banner for migrated users | No blocker | ✅ Done |
+| 4 | Console add_user.php — migrated flag + state/industry fields | No blocker | ✅ Done |
+| 5 | **Downloads section** — admin upload + user download | No blocker | 🔲 Next |
+| 6 | **Book a Demo form** | No blocker | 🔲 Next |
+| 7 | **Request for Quote standalone form** | No blocker | 🔲 Next |
+| 8 | **Access control banners** — Projects/Companies/KeyPersons | No blocker | 🔲 Ready |
+| 9 | **My Profile page** — edit details, change password | No blocker | 🔲 Ready |
+| 10 | Fix `&apos;` entities in CapEx News article sidebar | No blocker | 🔲 Quick fix |
+| 11 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation | No blocker | 🔲 Post-beta |
+| 12 | **Registration Redesign** — OTP + activation flow (for July 1 public launch) | Fast2SMS key + npis_users dump | 🔲 Pre July 1 |
+| 13 | **Orders Portal** — /orders/ | After payment flow | 🔲 Post-beta |
+| 14 | **AI Enrichment Pipeline** — bulk project data enrichment via Claude API | ~$280 Anthropic credits | 🔲 Post-launch |
+| 15 | Client logos for homepage | Jp to provide | ⏳ Pending |
+| 16 | Bank details for Payment Methods page | Jp to provide | ⏳ Pending |
+| 17 | GSTIN + HSN/SAC code for tax invoices | Jp to provide | ⏳ Pending |
 
 ---
 
@@ -670,6 +680,7 @@ Do not run before launch — enrichment is a background data quality task.
 | 21 | 27 Apr | CapEx News module built. blog.sql imported (6,537 articles). dashboard/news.php + news_article.php live. Admin news.php + news_crud.php built with Quill editor. News Feed sidebar link activated. _auth.php localhost bug fixed. session_start() added to news pages. Migration messages drafted for legacy site, LinkedIn, Twitter. |
 | 23 | 28 Apr | Full sidebar redesign with collapsible sections. coming_soon.php with full content for About, History, Terms, Refund, Plan Compare, FAQ, Payment Methods. Legacy Welcome + FAQ pages. Project Hat Tip form + admin hattips.php. Projects/Companies/KeyPersons table+card toggle. Card view redesigned (IIG style, 3-col portrait). Project detail banner shows company name. Access control rules defined. Dashboard home page redesigned (DB teaser cards, industry bars, top states, recent activity, latest news). fmt_cost updated globally to show actual cost in Mn. Pricing page rebuilt with new sidebar. |
 | 24 | 29 Apr | Launch strategy finalised. Two-phase plan: Closed Beta (now→Jun 30) for 120 paid legacy users only, Public Launch decision point July 1. Migrated user experience spec written. Closed beta page spec written. Build priority reordered around beta launch. |
+| 25 | 30 Apr | Priority 1 beta launch prep completed. Closed beta page live at /register.php (original backed up as register_full.php). _auth.php updated with $auth_source detection from DB. _layout.php updated: Subscription section hidden for migrated users, credit bar + upgrade alerts hidden for migrated users. pricing.php redirects migrated users to dashboard. index.php: migrated-specific welcome banner added. npt_users.source ENUM updated to include 'migrated'. console/add_user.php rebuilt: Source dropdown (Migrated Legacy User default), state/industry access fields, unlimited credits for migrated users. Your account set to source=migrated for testing — all working correctly. |
 
 ---
 
