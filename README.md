@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 30 April 2026 (Day 25)**
+**Last Updated: 2 May 2026 (Day 26)**
 
 ---
 
@@ -455,7 +455,79 @@ My Orders → Console orders tab → Console activation → Razorpay (last, need
 
 ---
 
-#### Phase 1 — Closed Beta (Now → June 30, 2026)
+### SPEC 6 — Lapsed User Engagement System
+
+**Who they are:**
+- 650+ past NPT subscribers who paid once or multiple times and did not renew
+- They know NPT — no need to explain the product
+- Being reached via email, WhatsApp, phone and in person
+
+**The offer:**
+- Free 15-day Premium trial on NPT Intelligence
+- No credit card, no obligation
+- Positioned as: *"We've rebuilt NPT from scratch. Come see what's new — on us."*
+- Credits set individually per user based on their history
+
+**Source flag:** `source = 'lapsed'` — separate from `migrated`
+
+**Their dashboard experience (different from migrated):**
+- DO see pricing page — mild nudges to convert
+- Welcome banner specific to lapsed users: acknowledges they are returning, explains free trial
+- Trial countdown in sidebar: *"Your free trial ends in X days"*
+- Upgrade prompts appear when trial < 5 days remaining
+- When trial expires → conversion page: *"Your trial has ended. Renew to keep access."*
+
+**Console — adding lapsed users:**
+- Same add_user.php form — select `source = 'lapsed'`
+- Set `plan_type = 'premium'`, `plan_status = 'active'`
+- Set `plan_start` = today, `plan_end` = 15 days from today
+- Set credits individually per user (Jp decides)
+- State/industry access as per their legacy subscription history
+
+**What to track:**
+- Activity during trial (logins, projects viewed, searches)
+- Console shows trial status, days remaining, activity count per user
+- Heavy users → personal call from Jp/Kavitha
+- Inactive users → WhatsApp nudge on day 7 and day 13
+
+**DB changes needed:**
+- `npt_users.source` ENUM: add 'lapsed' value
+- Trial countdown uses existing `plan_end` field — no new fields needed
+
+**Files to build/modify:**
+- `console/add_user.php` — add 'lapsed' to source dropdown
+- `dashboard/_auth.php` — detect lapsed source, compute trial days remaining
+- `dashboard/_layout.php` — trial countdown for lapsed users, upgrade nudge < 5 days
+- `dashboard/index.php` — lapsed-specific welcome banner
+- `dashboard/pricing.php` — returning user message for lapsed users
+- `dashboard/trial_expired.php` — new page shown when trial ends
+
+---
+
+### SPEC 7 — Public CapEx News Magazine
+
+**URL:** `newprojectstracker.in/capex-news/`
+**Status:** ✅ LIVE
+
+**What it does:**
+- Public page — no login required
+- Shows CapEx news from April 23, 2026 onwards only
+- No archives (avoids SEO duplication with legacy site's 25k indexed pages)
+- Listing page: 10 articles per page, industry tag, company, date, excerpt
+- Single article page: full content, prev/next nav, latest news sidebar
+- Archive link points to legacy site (`newprojectstracker.com/capex-news`)
+- No login prompts until July 1 public launch
+
+**Legacy site notice (to be added by Jp/team):**
+Post a message on `newprojectstracker.com/capex-news` saying:
+*"We have moved. Read the latest CapEx News at newprojectstracker.in/capex-news"*
+Manual link — no automatic redirect.
+
+**Post July 1 changes:**
+- Add login/register prompts for archive access
+- Add search and filter on public page
+
+---
 
 **Who can access the new site:**
 - Only manually migrated paid legacy users (120 users)
@@ -610,19 +682,21 @@ Do not run before launch — enrichment is a background data quality task.
 | 2 | Migrated user experience — hide pricing + upgrade prompts | No blocker | ✅ Done |
 | 3 | Welcome banner for migrated users | No blocker | ✅ Done |
 | 4 | Console add_user.php — migrated flag + state/industry fields | No blocker | ✅ Done |
-| 5 | **Downloads section** — admin upload + user download | No blocker | 🔲 Next |
-| 6 | **Book a Demo form** | No blocker | 🔲 Next |
-| 7 | **Request for Quote standalone form** | No blocker | 🔲 Next |
-| 8 | **Access control banners** — Projects/Companies/KeyPersons | No blocker | 🔲 Ready |
-| 9 | **My Profile page** — edit details, change password | No blocker | 🔲 Ready |
-| 10 | Fix `&apos;` entities in CapEx News article sidebar | No blocker | 🔲 Quick fix |
-| 11 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation | No blocker | 🔲 Post-beta |
-| 12 | **Registration Redesign** — OTP + activation flow (for July 1 public launch) | Fast2SMS key + npis_users dump | 🔲 Pre July 1 |
-| 13 | **Orders Portal** — /orders/ | After payment flow | 🔲 Post-beta |
-| 14 | **AI Enrichment Pipeline** — bulk project data enrichment via Claude API | ~$280 Anthropic credits | 🔲 Post-launch |
-| 15 | Client logos for homepage | Jp to provide | ⏳ Pending |
-| 16 | Bank details for Payment Methods page | Jp to provide | ⏳ Pending |
-| 17 | GSTIN + HSN/SAC code for tax invoices | Jp to provide | ⏳ Pending |
+| 5 | Public CapEx News magazine — /capex-news/ | No blocker | ✅ Done |
+| 6 | **Lapsed user engagement system** — source='lapsed', 15-day trial, trial countdown, conversion nudges | No blocker | 🔲 Next |
+| 7 | **Downloads section** — admin upload + user download | No blocker | 🔲 Next |
+| 8 | **Book a Demo form** | No blocker | 🔲 Next |
+| 9 | **Request for Quote standalone form** | No blocker | 🔲 Next |
+| 10 | **Access control banners** — Projects/Companies/KeyPersons | No blocker | 🔲 Ready |
+| 11 | **My Profile page** — edit details, change password | No blocker | 🔲 Ready |
+| 12 | Fix `&apos;` entities in CapEx News article sidebar | No blocker | 🔲 Quick fix |
+| 13 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation | No blocker | 🔲 Post-beta |
+| 14 | **Registration Redesign** — OTP + activation flow (for July 1 public launch) | Fast2SMS key + npis_users dump | 🔲 Pre July 1 |
+| 15 | **Orders Portal** — /orders/ | After payment flow | 🔲 Post-beta |
+| 16 | **AI Enrichment Pipeline** — bulk project data enrichment via Claude API | ~$280 Anthropic credits | 🔲 Post-launch |
+| 17 | Client logos for homepage | Jp to provide | ⏳ Pending |
+| 18 | Bank details for Payment Methods page | Jp to provide | ⏳ Pending |
+| 19 | GSTIN + HSN/SAC code for tax invoices | Jp to provide | ⏳ Pending |
 
 ---
 
@@ -680,7 +754,8 @@ Do not run before launch — enrichment is a background data quality task.
 | 21 | 27 Apr | CapEx News module built. blog.sql imported (6,537 articles). dashboard/news.php + news_article.php live. Admin news.php + news_crud.php built with Quill editor. News Feed sidebar link activated. _auth.php localhost bug fixed. session_start() added to news pages. Migration messages drafted for legacy site, LinkedIn, Twitter. |
 | 23 | 28 Apr | Full sidebar redesign with collapsible sections. coming_soon.php with full content for About, History, Terms, Refund, Plan Compare, FAQ, Payment Methods. Legacy Welcome + FAQ pages. Project Hat Tip form + admin hattips.php. Projects/Companies/KeyPersons table+card toggle. Card view redesigned (IIG style, 3-col portrait). Project detail banner shows company name. Access control rules defined. Dashboard home page redesigned (DB teaser cards, industry bars, top states, recent activity, latest news). fmt_cost updated globally to show actual cost in Mn. Pricing page rebuilt with new sidebar. |
 | 24 | 29 Apr | Launch strategy finalised. Two-phase plan: Closed Beta (now→Jun 30) for 120 paid legacy users only, Public Launch decision point July 1. Migrated user experience spec written. Closed beta page spec written. Build priority reordered around beta launch. |
-| 25 | 30 Apr | Priority 1 beta launch prep completed. Closed beta page live at /register.php (original backed up as register_full.php). _auth.php updated with $auth_source detection from DB. _layout.php updated: Subscription section hidden for migrated users, credit bar + upgrade alerts hidden for migrated users. pricing.php redirects migrated users to dashboard. index.php: migrated-specific welcome banner added. npt_users.source ENUM updated to include 'migrated'. console/add_user.php rebuilt: Source dropdown (Migrated Legacy User default), state/industry access fields, unlimited credits for migrated users. Your account set to source=migrated for testing — all working correctly. |
+| 25 | 30 Apr | Priority 1 beta launch prep completed. Closed beta page live at /register.php (original backed up as register_full.php). _auth.php updated with $auth_source detection from DB. _layout.php updated: Subscription section hidden for migrated users, credit bar + upgrade alerts hidden for migrated users. pricing.php redirects migrated users to dashboard. index.php: migrated-specific welcome banner added. npt_users.source ENUM updated to include 'migrated'. console/add_user.php rebuilt: Source dropdown (Migrated Legacy User default), state/industry access fields, unlimited credits for migrated users. |
+| 26 | 2 May | Launch strategy discussion. Decided: no public registrations till June 30. Two new user groups planned: (1) Lapsed premium users — 650+ past subscribers, 15-day free trial, source='lapsed'. (2) Post July 1 — lukewarm legacy free users (~4k). Public CapEx News magazine built at /capex-news/ — clean public page, no login required, shows news from April 23 onwards, archive link to legacy site. Single article page with full content, prev/next nav, latest news sidebar. |
 
 ---
 
