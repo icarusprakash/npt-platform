@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 2 May 2026 (Day 26)**
+**Last Updated: 4 May 2026 (Day 27)**
 
 ---
 
@@ -681,22 +681,42 @@ Do not run before launch — enrichment is a background data quality task.
 | 1 | Closed beta page — /register | No blocker | ✅ Done |
 | 2 | Migrated user experience — hide pricing + upgrade prompts | No blocker | ✅ Done |
 | 3 | Welcome banner for migrated users | No blocker | ✅ Done |
-| 4 | Console add_user.php — migrated flag + state/industry fields | No blocker | ✅ Done |
+| 4 | Console add_user.php — fully rebuilt with 4 source types | No blocker | ✅ Done |
 | 5 | Public CapEx News magazine — /capex-news/ | No blocker | ✅ Done |
-| 6 | **Lapsed user engagement system** — source='lapsed', 15-day trial, trial countdown, conversion nudges | No blocker | 🔲 Next |
-| 7 | **Downloads section** — admin upload + user download | No blocker | 🔲 Next |
-| 8 | **Book a Demo form** | No blocker | 🔲 Next |
-| 9 | **Request for Quote standalone form** | No blocker | 🔲 Next |
-| 10 | **Access control banners** — Projects/Companies/KeyPersons | No blocker | 🔲 Ready |
-| 11 | **My Profile page** — edit details, change password | No blocker | 🔲 Ready |
-| 12 | Fix `&apos;` entities in CapEx News article sidebar | No blocker | 🔲 Quick fix |
-| 13 | **Pricing & Payment Flow** — offline flow + My Orders + Console activation | No blocker | 🔲 Post-beta |
-| 14 | **Registration Redesign** — OTP + activation flow (for July 1 public launch) | Fast2SMS key + npis_users dump | 🔲 Pre July 1 |
-| 15 | **Orders Portal** — /orders/ | After payment flow | 🔲 Post-beta |
-| 16 | **AI Enrichment Pipeline** — bulk project data enrichment via Claude API | ~$280 Anthropic credits | 🔲 Post-launch |
-| 17 | Client logos for homepage | Jp to provide | ⏳ Pending |
-| 18 | Bank details for Payment Methods page | Jp to provide | ⏳ Pending |
-| 19 | GSTIN + HSN/SAC code for tax invoices | Jp to provide | ⏳ Pending |
+| 6 | Lapsed user engagement system — trial, expired page, nudges | No blocker | ✅ Done |
+| 7 | RFQ form + Payment Methods page | No blocker | ✅ Done |
+| 8 | **Admin RFQ management** — view/manage RFQs in Console | No blocker | 🔲 Next |
+| 9 | **Console plan upgrade flow** — change lapsed→paid, extend dates | No blocker | 🔲 Next |
+| 10 | **Email SMTP** — verify PHP mail() delivery, switch to Gmail SMTP if needed | No blocker | 🔲 Next |
+| 11 | **Downloads section** — admin upload + user download (Daily PDF, Weekly Excel) | No blocker | 🔲 Ready |
+| 12 | **Book a Demo form** | No blocker | 🔲 Ready |
+| 13 | **Access control banners** — Projects/Companies/KeyPersons | No blocker | 🔲 Ready |
+| 14 | **My Profile page** — edit details, change password | No blocker | 🔲 Ready |
+| 15 | Fix `&apos;` entities in CapEx News article sidebar | No blocker | 🔲 Quick fix |
+| 16 | **Registration Redesign** — OTP + activation flow (for July 1 public launch) | Fast2SMS key + npis_users dump | 🔲 Pre July 1 |
+| 17 | **Orders Portal** — /orders/ | After payment flow | 🔲 Post-beta |
+| 18 | **AI Enrichment Pipeline** — bulk project data enrichment via Claude API | ~$280 Anthropic credits | 🔲 Post-launch |
+| 19 | Client logos for homepage | Jp to provide | ⏳ Pending |
+| 20 | GSTIN + HSN/SAC code for tax invoices (Kariyamangalam Tech) | Jp to obtain | ⏳ Pending |
+
+---
+
+## NPT AI Lab — Parallel Project
+
+A separate Claude.ai Project called **NPT AI Lab** has been created for experimental AI features.
+Features built there will be integrated into this platform when ready.
+
+**Current AI Lab focus:** Natural Language Project Search
+- User types plain English query → Claude interprets intent → generates SQL → returns structured results
+- No vector DB needed — Claude API + existing MariaDB
+- Will integrate into dashboard as an alternative to filter dropdowns
+
+**Future AI Lab features:**
+- Live Project Intel ("Get Latest Intel" button on project page — web-augmented updates)
+- PitchOS pre-call brief generator
+- Tender Summarizer
+
+**Integration rule:** When an AI Lab feature is production-ready, bring output to this project thread for integration into the dashboard.
 
 ---
 
@@ -756,6 +776,7 @@ Do not run before launch — enrichment is a background data quality task.
 | 24 | 29 Apr | Launch strategy finalised. Two-phase plan: Closed Beta (now→Jun 30) for 120 paid legacy users only, Public Launch decision point July 1. Migrated user experience spec written. Closed beta page spec written. Build priority reordered around beta launch. |
 | 25 | 30 Apr | Priority 1 beta launch prep completed. Closed beta page live at /register.php (original backed up as register_full.php). _auth.php updated with $auth_source detection from DB. _layout.php updated: Subscription section hidden for migrated users, credit bar + upgrade alerts hidden for migrated users. pricing.php redirects migrated users to dashboard. index.php: migrated-specific welcome banner added. npt_users.source ENUM updated to include 'migrated'. console/add_user.php rebuilt: Source dropdown (Migrated Legacy User default), state/industry access fields, unlimited credits for migrated users. |
 | 26 | 2 May | Launch strategy discussion. Decided: no public registrations till June 30. Two new user groups planned: (1) Lapsed premium users — 650+ past subscribers, 15-day free trial, source='lapsed'. (2) Post July 1 — lukewarm legacy free users (~4k). Public CapEx News magazine built at /capex-news/ — clean public page, no login required, shows news from April 23 onwards, archive link to legacy site. Single article page with full content, prev/next nav, latest news sidebar. |
+| 27 | 4 May | Lapsed user system fully built: source='lapsed' ENUM added, _auth.php trial detection, trial countdown bar in _layout.php (with credits/daily usage), lapsed welcome banner in index.php, trial_expired.php new page, pricing.php returning user message. Console add_user.php fully rebuilt: 4 source type cards (Migrated/Lapsed/Paid/Self-register), smart auto-fill defaults, Generate Password button, collapsed access restrictions. RFQ form built (rfq.php) with npt_rfq table + email notification to Kavitha. Payment Methods page built (paymentmethods.php) with full SBI bank details, copy buttons, UPI section, step-by-step process. Sidebar links updated for RFQ and Payment Methods. NPT AI Lab project created separately for experimental AI features (Natural Language Search first). |
 
 ---
 
