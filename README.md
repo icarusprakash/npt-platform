@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 4 May 2026 (Day 27)**
+**Last Updated: 4 May 2026 (Day 28)**
 
 ---
 
@@ -683,7 +683,7 @@ Do not run before launch — enrichment is a background data quality task.
 | 3 | Welcome banner for migrated users | No blocker | ✅ Done |
 | 4 | Console add_user.php — fully rebuilt with 4 source types | No blocker | ✅ Done |
 | 5 | Public CapEx News magazine — /capex-news/ | No blocker | ✅ Done |
-| 6 | Lapsed user engagement system — trial, expired page, nudges | No blocker | ✅ Done |
+| 6 | Lapsed user engagement system — trial, countdown, expired page | No blocker | ✅ Done |
 | 7 | RFQ form + Payment Methods page | No blocker | ✅ Done |
 | 8 | **Admin RFQ management** — view/manage RFQs in Console | No blocker | 🔲 Next |
 | 9 | **Console plan upgrade flow** — change lapsed→paid, extend dates | No blocker | 🔲 Next |
@@ -701,22 +701,16 @@ Do not run before launch — enrichment is a background data quality task.
 
 ---
 
-## NPT AI Lab — Parallel Project
+## AI Features — Phase 2 (Post-Launch, Shelved for Now)
 
-A separate Claude.ai Project called **NPT AI Lab** has been created for experimental AI features.
-Features built there will be integrated into this platform when ready.
+Explored in a side thread on 4 May 2026. **Decision: shelved until NPT 2.0 is live and stable.**
+Will be revisited in this thread, one feature at a time, after public launch.
 
-**Current AI Lab focus:** Natural Language Project Search
-- User types plain English query → Claude interprets intent → generates SQL → returns structured results
-- No vector DB needed — Claude API + existing MariaDB
-- Will integrate into dashboard as an alternative to filter dropdowns
+Concepts noted for future: Natural Language Search, Live Project Intel, Company Intelligence Cards,
+Project Fit Scoring, AI Daily Brief, Geo-Proximity Discovery, Bid Prep Assistant, Smart Alert Engine,
+Ask-About-A-Project Chat, Market Intelligence Dashboard.
 
-**Future AI Lab features:**
-- Live Project Intel ("Get Latest Intel" button on project page — web-augmented updates)
-- PitchOS pre-call brief generator
-- Tender Summarizer
-
-**Integration rule:** When an AI Lab feature is production-ready, bring output to this project thread for integration into the dashboard.
+No code changes made. `npis_projects` schema reviewed — no changes.
 
 ---
 
@@ -776,7 +770,8 @@ Features built there will be integrated into this platform when ready.
 | 24 | 29 Apr | Launch strategy finalised. Two-phase plan: Closed Beta (now→Jun 30) for 120 paid legacy users only, Public Launch decision point July 1. Migrated user experience spec written. Closed beta page spec written. Build priority reordered around beta launch. |
 | 25 | 30 Apr | Priority 1 beta launch prep completed. Closed beta page live at /register.php (original backed up as register_full.php). _auth.php updated with $auth_source detection from DB. _layout.php updated: Subscription section hidden for migrated users, credit bar + upgrade alerts hidden for migrated users. pricing.php redirects migrated users to dashboard. index.php: migrated-specific welcome banner added. npt_users.source ENUM updated to include 'migrated'. console/add_user.php rebuilt: Source dropdown (Migrated Legacy User default), state/industry access fields, unlimited credits for migrated users. |
 | 26 | 2 May | Launch strategy discussion. Decided: no public registrations till June 30. Two new user groups planned: (1) Lapsed premium users — 650+ past subscribers, 15-day free trial, source='lapsed'. (2) Post July 1 — lukewarm legacy free users (~4k). Public CapEx News magazine built at /capex-news/ — clean public page, no login required, shows news from April 23 onwards, archive link to legacy site. Single article page with full content, prev/next nav, latest news sidebar. |
-| 27 | 4 May | Lapsed user system fully built: source='lapsed' ENUM added, _auth.php trial detection, trial countdown bar in _layout.php (with credits/daily usage), lapsed welcome banner in index.php, trial_expired.php new page, pricing.php returning user message. Console add_user.php fully rebuilt: 4 source type cards (Migrated/Lapsed/Paid/Self-register), smart auto-fill defaults, Generate Password button, collapsed access restrictions. RFQ form built (rfq.php) with npt_rfq table + email notification to Kavitha. Payment Methods page built (paymentmethods.php) with full SBI bank details, copy buttons, UPI section, step-by-step process. Sidebar links updated for RFQ and Payment Methods. NPT AI Lab project created separately for experimental AI features (Natural Language Search first). |
+| 27 | 4 May | Lapsed user system fully built: source='lapsed' ENUM added, _auth.php trial detection, trial countdown bar in _layout.php (with credits/daily usage), lapsed welcome banner in index.php, trial_expired.php new page, pricing.php returning user message. Console add_user.php fully rebuilt: 4 source type cards (Migrated/Lapsed/Paid/Self-register), smart auto-fill defaults, Generate Password button, collapsed access restrictions. RFQ form built (rfq.php) with npt_rfq table + email notification to Kavitha. Payment Methods page built (paymentmethods.php) with full SBI bank details, copy buttons, UPI section, step-by-step process. Sidebar links updated for RFQ and Payment Methods. |
+| 28 | 4 May | AI feature exploration done in a side thread — 10 concepts discussed (Natural Language Search, Live Project Intel, Company Intelligence Cards, Project Fit Scoring, AI Daily Brief, Geo-Proximity Discovery, Bid Prep Assistant, Smart Alert Engine, Ask-About-A-Project Chat, Market Intelligence Dashboard). Decision: ALL AI features shelved. Ship NPT 2.0 first. AI features to be explored as clean Phase 2 in this thread, one at a time, after launch. No code changes made. npis_projects schema reviewed — no changes. Resuming NPT 2.0 development. |
 
 ---
 
