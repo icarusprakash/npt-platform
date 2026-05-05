@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 4 May 2026 (Day 28)**
+**Last Updated: 5 May 2026 (Day 29)**
 
 ---
 
@@ -455,7 +455,41 @@ My Orders → Console orders tab → Console activation → Razorpay (last, need
 
 ---
 
-### SPEC 6 — Lapsed User Engagement System
+### SPEC 8 — Product Tags & Equipment Tags Auto-Population (Claude API)
+
+**Fields to populate:**
+- `proj_tags` — comma-separated product tags (e.g. `Sugar,Ethanol,Captive Power`)
+- `proj_equip_tags` — comma-separated equipment/machinery tags (e.g. `Boiler,Turbine,Conveyor System`)
+
+**Input fields per project:**
+- `proj_synopsis` — project title/summary
+- `proj_endproduct` — end product description
+- `proj_prodcap` — production capacity details
+- `proj_details` — full project description
+
+**API call:**
+- Model: `claude-haiku-4-5` (cheapest, sufficient for tag extraction)
+- Prompt: "Read the following project information and extract: (1) 5-8 product/output tags — the products this project will produce, without capacities, as short noun phrases. (2) 7-10 equipment/machinery tags — the major plant, machinery and equipment required to execute this project, as short noun phrases. Return only JSON: {product_tags: [...], equipment_tags: [...]}"
+- Max tokens: 200 per project
+
+**Cost estimate:**
+- ~40,000 projects × ~600 input tokens + 200 output tokens = ~32M tokens
+- Haiku pricing: ~$0.25/M input + $1.25/M output = ~$8-10 total
+- Run in batches of 100 projects/day — completes in ~400 days passively OR 500/day = 80 days
+
+**Script location:** `C:\Users\Admin\nptcleaner\populate_tags.py`
+
+**Logic:**
+- Read unpopulated records (proj_tags IS NULL OR proj_tags = '')
+- Call Claude API for each batch
+- Parse JSON response
+- UPDATE npis_projects SET proj_tags=?, proj_equip_tags=? WHERE proj_id=?
+- Log processed IDs to avoid reprocessing
+- Skip projects with no synopsis/details
+
+**Priority:** Run after email SMTP is fixed. Can run in background while platform is live.
+
+---
 
 **Who they are:**
 - 650+ past NPT subscribers who paid once or multiple times and did not renew
@@ -685,9 +719,9 @@ Do not run before launch — enrichment is a background data quality task.
 | 5 | Public CapEx News magazine — /capex-news/ | No blocker | ✅ Done |
 | 6 | Lapsed user engagement system — trial, countdown, expired page | No blocker | ✅ Done |
 | 7 | RFQ form + Payment Methods page | No blocker | ✅ Done |
-| 8 | **Admin RFQ management** — view/manage RFQs in Console | No blocker | 🔲 Next |
-| 9 | **Console plan upgrade flow** — change lapsed→paid, extend dates | No blocker | 🔲 Next |
-| 10 | **Email SMTP** — verify PHP mail() delivery, switch to Gmail SMTP if needed | No blocker | 🔲 Next |
+| 8 | Admin RFQ management — Console rfq.php | No blocker | ✅ Done |
+| 9 | Console plan upgrade flow — source field added to user.php | No blocker | ✅ Done |
+| 10 | **Email SMTP fix** — use kavita@nptonline.com SMTP (get credentials from developer) | nptonline.com hosting credentials | 🔲 Tomorrow |
 | 11 | **Downloads section** — admin upload + user download (Daily PDF, Weekly Excel) | No blocker | 🔲 Ready |
 | 12 | **Book a Demo form** | No blocker | 🔲 Ready |
 | 13 | **Access control banners** — Projects/Companies/KeyPersons | No blocker | 🔲 Ready |
@@ -771,13 +805,15 @@ No code changes made. `npis_projects` schema reviewed — no changes.
 | 25 | 30 Apr | Priority 1 beta launch prep completed. Closed beta page live at /register.php (original backed up as register_full.php). _auth.php updated with $auth_source detection from DB. _layout.php updated: Subscription section hidden for migrated users, credit bar + upgrade alerts hidden for migrated users. pricing.php redirects migrated users to dashboard. index.php: migrated-specific welcome banner added. npt_users.source ENUM updated to include 'migrated'. console/add_user.php rebuilt: Source dropdown (Migrated Legacy User default), state/industry access fields, unlimited credits for migrated users. |
 | 26 | 2 May | Launch strategy discussion. Decided: no public registrations till June 30. Two new user groups planned: (1) Lapsed premium users — 650+ past subscribers, 15-day free trial, source='lapsed'. (2) Post July 1 — lukewarm legacy free users (~4k). Public CapEx News magazine built at /capex-news/ — clean public page, no login required, shows news from April 23 onwards, archive link to legacy site. Single article page with full content, prev/next nav, latest news sidebar. |
 | 27 | 4 May | Lapsed user system fully built: source='lapsed' ENUM added, _auth.php trial detection, trial countdown bar in _layout.php (with credits/daily usage), lapsed welcome banner in index.php, trial_expired.php new page, pricing.php returning user message. Console add_user.php fully rebuilt: 4 source type cards (Migrated/Lapsed/Paid/Self-register), smart auto-fill defaults, Generate Password button, collapsed access restrictions. RFQ form built (rfq.php) with npt_rfq table + email notification to Kavitha. Payment Methods page built (paymentmethods.php) with full SBI bank details, copy buttons, UPI section, step-by-step process. Sidebar links updated for RFQ and Payment Methods. |
-| 28 | 4 May | AI feature exploration done in a side thread — 10 concepts discussed (Natural Language Search, Live Project Intel, Company Intelligence Cards, Project Fit Scoring, AI Daily Brief, Geo-Proximity Discovery, Bid Prep Assistant, Smart Alert Engine, Ask-About-A-Project Chat, Market Intelligence Dashboard). Decision: ALL AI features shelved. Ship NPT 2.0 first. AI features to be explored as clean Phase 2 in this thread, one at a time, after launch. No code changes made. npis_projects schema reviewed — no changes. Resuming NPT 2.0 development. |
+| 28 | 4 May | AI feature exploration done in a side thread — all AI features shelved. Ship NPT 2.0 first. No code changes. Resuming NPT 2.0. Console RFQ management page built (console/rfq.php) — filter tabs, WhatsApp button, status update, admin notes, View User link. Sales section added to Console sidebar. source field added to console/user.php edit form. PHPMailer installed via Composer. Gmail SMTP attempted — authentication failing. Root cause identified: server outbound mail blocked for newprojectstracker domain (same issue legacy site had — they switched to kavita@nptonline.com as workaround). Will fix tomorrow with nptonline.com SMTP credentials from developer. |
+| 29 | 5 May | Dashboard tuning session. Data enrichment layer: proj_teaser shown as highlighted summary box on Overview tab. proj_history confirmed internal-only — never displayed. Intelligence tab shows AI enrichment coming soon message with proj_intel + proj_intel_date fields (already existed). Product Tags (proj_tags) displayed as clickable orange chips on project detail page — clicking filters projects by tag. Equipment & Machinery Scope (proj_equip_tags) — new field added to DB, displayed as green chips on project detail page, clickable filter. Both tag fields added to projects.php filter/search. Auto-population script spec added to README. |
 
 ---
 
 ## Key Rules
 - **newprojectstracker.com: NEVER TOUCH**
-- proj_updateddate changes ONLY on proj_details or proj_stage edit
+- proj_history — INTERNAL ONLY, never display to subscribers, never show outside dashboard admin
+- proj_equipments — legacy field, wrong data (end products not equipment), ignore for new features — use proj_equip_tags instead
 - Unpublish only from project view page
 - proj_industry NOT proj_sector
 - Delete SQL dumps immediately after import
