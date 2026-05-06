@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 5 May 2026 (Day 29)**
+**Last Updated: 6 May 2026 (Day 30)**
 
 ---
 
@@ -713,25 +713,32 @@ Do not run before launch — enrichment is a background data quality task.
 | # | Task | Dependencies | Status |
 |---|------|-------------|--------|
 | 1 | Closed beta page — /register | No blocker | ✅ Done |
-| 2 | Migrated user experience — hide pricing + upgrade prompts | No blocker | ✅ Done |
-| 3 | Welcome banner for migrated users | No blocker | ✅ Done |
-| 4 | Console add_user.php — fully rebuilt with 4 source types | No blocker | ✅ Done |
-| 5 | Public CapEx News magazine — /capex-news/ | No blocker | ✅ Done |
-| 6 | Lapsed user engagement system — trial, countdown, expired page | No blocker | ✅ Done |
-| 7 | RFQ form + Payment Methods page | No blocker | ✅ Done |
-| 8 | Admin RFQ management — Console rfq.php | No blocker | ✅ Done |
-| 9 | Console plan upgrade flow — source field added to user.php | No blocker | ✅ Done |
-| 10 | **Email SMTP fix** — use kavita@nptonline.com SMTP (get credentials from developer) | nptonline.com hosting credentials | 🔲 Tomorrow |
-| 11 | **Downloads section** — admin upload + user download (Daily PDF, Weekly Excel) | No blocker | 🔲 Ready |
-| 12 | **Book a Demo form** | No blocker | 🔲 Ready |
-| 13 | **Access control banners** — Projects/Companies/KeyPersons | No blocker | 🔲 Ready |
-| 14 | **My Profile page** — edit details, change password | No blocker | 🔲 Ready |
-| 15 | Fix `&apos;` entities in CapEx News article sidebar | No blocker | 🔲 Quick fix |
-| 16 | **Registration Redesign** — OTP + activation flow (for July 1 public launch) | Fast2SMS key + npis_users dump | 🔲 Pre July 1 |
-| 17 | **Orders Portal** — /orders/ | After payment flow | 🔲 Post-beta |
-| 18 | **AI Enrichment Pipeline** — bulk project data enrichment via Claude API | ~$280 Anthropic credits | 🔲 Post-launch |
-| 19 | Client logos for homepage | Jp to provide | ⏳ Pending |
-| 20 | GSTIN + HSN/SAC code for tax invoices (Kariyamangalam Tech) | Jp to obtain | ⏳ Pending |
+| 2 | Migrated user experience | No blocker | ✅ Done |
+| 3 | Console add_user.php — 4 source types | No blocker | ✅ Done |
+| 4 | Public CapEx News magazine | No blocker | ✅ Done |
+| 5 | Lapsed user engagement system | No blocker | ✅ Done |
+| 6 | RFQ form + Payment Methods page | No blocker | ✅ Done |
+| 7 | Admin RFQ management in Console | No blocker | ✅ Done |
+| 8 | Console plan upgrade flow — source field in user.php | No blocker | ✅ Done |
+| 9 | Sidebar restructure + topbar upgrade button + My Account dropdown | No blocker | ✅ Done |
+| 10 | Footer with static links | No blocker | ✅ Done |
+| 11 | AI Tools page (aitools.php) | No blocker | ✅ Done |
+| 12 | Dashboard charts — animated counters, donut, bar, sparkline | No blocker | ✅ Done |
+| 13 | Subscriber project.php — full redesign, two-column, no tabs | No blocker | ✅ Done |
+| 14 | Admin company.php — edit + delete | No blocker | ✅ Done |
+| 15 | Admin companies — Missing Address tab (red badge) | No blocker | ✅ Done |
+| 16 | **Add proj_tags + proj_equip_tags to admin crud.php** | No blocker | 🔲 Tomorrow #1 |
+| 17 | **Email SMTP fix** — kavita@nptonline.com credentials from developer | nptonline.com hosting creds | 🔲 Tomorrow #2 |
+| 18 | **My Profile page** — tabs: Edit Profile, My Usage, Change Password | No blocker | 🔲 Ready |
+| 19 | **Downloads section** — Daily PDF, Weekly Excel, Special Reports | No blocker | 🔲 Ready |
+| 20 | **Book a Demo form** | No blocker | 🔲 Ready |
+| 21 | Fix `&apos;` entities in CapEx News sidebar | No blocker | 🔲 Quick fix |
+| 22 | **Project PDF download** | No blocker | 🔲 Ready |
+| 23 | **Registration Redesign** — OTP flow (July 1) | Fast2SMS key + npis_users dump | 🔲 Pre July 1 |
+| 24 | **Tag auto-population script** — Claude Haiku ~$8-10 | No blocker | 🔲 Post-beta |
+| 25 | **AI Enrichment Pipeline** — proj_intel bulk fill | ~$280 Anthropic credits | 🔲 Post-launch |
+| 26 | Client logos for homepage | Jp to provide | ⏳ Pending |
+| 27 | GSTIN for Kariyamangalam Tech | Jp to obtain | ⏳ Pending |
 
 ---
 
@@ -807,6 +814,7 @@ No code changes made. `npis_projects` schema reviewed — no changes.
 | 27 | 4 May | Lapsed user system fully built: source='lapsed' ENUM added, _auth.php trial detection, trial countdown bar in _layout.php (with credits/daily usage), lapsed welcome banner in index.php, trial_expired.php new page, pricing.php returning user message. Console add_user.php fully rebuilt: 4 source type cards (Migrated/Lapsed/Paid/Self-register), smart auto-fill defaults, Generate Password button, collapsed access restrictions. RFQ form built (rfq.php) with npt_rfq table + email notification to Kavitha. Payment Methods page built (paymentmethods.php) with full SBI bank details, copy buttons, UPI section, step-by-step process. Sidebar links updated for RFQ and Payment Methods. |
 | 28 | 4 May | AI feature exploration done in a side thread — all AI features shelved. Ship NPT 2.0 first. No code changes. Resuming NPT 2.0. Console RFQ management page built (console/rfq.php) — filter tabs, WhatsApp button, status update, admin notes, View User link. Sales section added to Console sidebar. source field added to console/user.php edit form. PHPMailer installed via Composer. Gmail SMTP attempted — authentication failing. Root cause identified: server outbound mail blocked for newprojectstracker domain (same issue legacy site had — they switched to kavita@nptonline.com as workaround). Will fix tomorrow with nptonline.com SMTP credentials from developer. |
 | 29 | 5 May | Dashboard tuning session. Data enrichment layer: proj_teaser shown as highlighted summary box on Overview tab. proj_history confirmed internal-only — never displayed. Intelligence tab shows AI enrichment coming soon message with proj_intel + proj_intel_date fields (already existed). Product Tags (proj_tags) displayed as clickable orange chips on project detail page — clicking filters projects by tag. Equipment & Machinery Scope (proj_equip_tags) — new field added to DB, displayed as green chips on project detail page, clickable filter. Both tag fields added to projects.php filter/search. Auto-population script spec added to README. |
+| 30 | 6 May | Major dashboard tuning session. Sidebar fully restructured — lean nav with Databases, My Tools, Downloads, AI Tools, Legacy NPT Users only. Topbar: Upgrade Plan button (orange) + My Account dropdown (Profile, Usage, Pricing, RFQ, Payment Methods, Sign Out). Footer added with static page links. AI Tools page built (aitools.php) — 6 tool cards with descriptions (PitchOS, Tender Summarizer, NL Search, Vendor Reg, AI Intelligence, Custom Research). Companies page: sort by recently added, "Company Details" link text, location shown instead of phone/email. Admin companies: Missing Address tab (red badge, excludes companies with address in npt_company_addresses). Admin company.php: Edit form added for all fields, Delete button. project.php query updated to JOIN npt_company_addresses for rich contact data. Subscriber project.php fully redesigned: no tabs, two-column layout (content left + sidebar right), fact strip, Save to Briefcase, Download PDF button, Investment at a Glance, Contacts, Related Projects in sidebar. proj_synopsis duplication removed. PDO fixes (fetch_assoc → fetch, real_escape_string → addslashes). |
 
 ---
 
