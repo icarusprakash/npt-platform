@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 15 May 2026 (Day 36)**
+**Last Updated: 17 May 2026 (Day 37)**
 
 ---
 
@@ -27,9 +27,9 @@
 
 | System | URL | Team | Status |
 |--------|-----|------|--------|
-| NPT Subscriber Portal | /dashboard/ | Paid subscribers | ✅ Live — Beta rollout started |
+| NPT Subscriber Portal | /dashboard/ | Paid subscribers | ✅ Live — Beta rollout ready |
 | NPT Admin Portal | /admin/ | Researchers | ✅ Live — Revamp in progress |
-| NPT Console | /console/ | Marketing/Sales (Kavitha) | ✅ Live — Fixed Day 35+36 |
+| NPT Console | /console/ | Marketing/Sales (Kavitha) | ✅ Live |
 | NPT Orders Portal | /orders/ | Sales & Finance | 🔲 To Build |
 | Public Website | / | Public | ✅ Live |
 
@@ -70,111 +70,88 @@
 
 ---
 
-## 🔴 TOP PRIORITY — NEXT SESSION (Day 37)
+## 🔴 TOP PRIORITY — DAY 38 (Tomorrow Morning)
 
-### Missing Contact Data Re-Import from Legacy DB
+### Project Freshness Indicator System
 
 **Background:**
-During the original data import from GoDaddy, four contact person fields were not imported:
-- `comp_tel1` — Key Person 1 phone
-- `comp_tel2` — Key Person 1 alternate phone
-- `comp_email1` — Key Person 1 email
-- `comp_email2` — Key Person 2 email
+NPT database has 40,000+ projects going back to 2012. Old projects appear in search results alongside fresh ones, causing subscriber disappointment and sales issues. Prospects think coverage is weak when old projects don't appear, but subscribers are frustrated when they click on a 4-year-old project.
 
-**Scale:**
-- 22,827 companies have a key person name
-- 13,351 (58%) are missing both phone and email
-- This is blocking full subscriber rollout
+**Solution — Three-layer approach:**
 
-**What's needed:** Full `npis_companies` SQL export from GoDaddy — upload at start of Day 37.
+**Layer 1: Age badge on every project listing card**
+Based on `proj_updateddate`:
+- 🟢 Fresh — updated within 12 months
+- 🟡 Archived — 1 to 3 years old  
+- 🔴 Legacy — 3+ years old
 
-**Import plan:**
-1. Upload SQL to server
-2. Run Python UPDATE script — fills only blank fields, never overwrites
-3. Join key: `comp_id` — identical in both DBs (safe)
-4. Verify with spot checks (e.g. Fermenta Biotech comp_id 15999)
+**Layer 2: Warning banner on old project story pages**
+For projects older than 12 months — show a visible banner:
+*"This project was last tracked in [year]. Our team can check for latest developments on request."*
+Plus a "Request Update" button.
 
-**Backup location (taken Day 34):**
-`/home/newprojectstracker.in/npis_companies_backup_20260511.sql` (13MB)
+**Layer 3: Request Update logging**
+- New table: `npt_update_requests` (proj_id, user_id, requested_at, status)
+- Simple insert on button click — no email needed yet
+- Internal team sees requests and prioritizes research
 
-**Restore command:**
-```bash
-mysql -u newp_npt_ai_user -pnpt_ai_user@123 newp_ai_engine < /home/newprojectstracker.in/npis_companies_backup_20260511.sql
+**Files to touch:**
+- `dashboard/projects.php` — add age badge to listing cards
+- `dashboard/project.php` — add warning banner + Request Update button
+- DB: create `npt_update_requests` table
+
+**Rollback guarantee:**
+- Both files backed up before any changes
+- Age badges are CSS/display only — zero DB changes to existing tables
+- Warning banner is read-only — just reads proj_updateddate
+- New table can be dropped instantly if needed
+- Revert = one file restore command per file
+
+**Age calculation field:** `proj_updateddate` (reflects last knowledge, not just entry date)
+
+---
+
+## Day 37 — What Was Done (17 May 2026)
+
+### npis_companies Contact Data Re-Import ✅ COMPLETE
+
+**What was done:**
+- GoDaddy legacy `npis_companies` SQL (14MB, 36,882 rows) uploaded to server
+- Python script written and executed — parsed all rows, updated 4 fields:
+  - `comp_tel1` — Key Person 1 phone
+  - `comp_tel2` — Key Person 1 alternate phone
+  - `comp_email1` — Key Person 1 email
+  - `comp_email2` — Key Person 2 email
+- UPDATE logic: IF(field = '' OR field IS NULL, new_value, keep_existing) — never overwrites
+- 8,229 rows processed with data, 28,652 skipped (already had data or legacy was also blank)
+- 1 collation error (minor, one row) — not significant
+
+**Verification:**
+- Fermenta Biotech (comp_id 15999) confirmed: comp_tel1=022-67910888, comp_tel2=022-67910800, comp_email1=prashant.puranik@fermentabiotech.com ✅
+- Subscriber dashboard company page showing correctly with all contact details ✅
+
+**Key finding:**
+- Only 3,584 companies (out of 36,695) have `comp_tel1` populated
+- The legacy DB itself only had phone/email for ~10% of key persons
+- Data was simply never collected for most records — not a migration issue
+- Staff will fill gaps over time via admin/company.php edit form
+
+**Cleanup:**
+- SQL file deleted from public_html after import ✅
+- Backup remains at: `/home/newprojectstracker.in/npis_companies_backup_20260511.sql`
+
+**Status: COMPLETE. Site ready for migrated user rollout.**
+
+---
+
+## Complete Project Entry Workflow (Final)
+
 ```
-
-**Status:** GoDaddy SQL export ready. Upload and run first thing Day 37.
-
----
-
-## Day 36 — What Was Done (15 May 2026)
-
-### Console Portal
-
-#### add_user.php — Simplified for Legacy Rollout ✅
-- Old complex form saved as `add_user_full.php` (parked for later)
-- New simplified form for migrated legacy subscribers only
-- Fields: Full Name, Email, Phone, Company, Designation, Password
-- Plan Type: Premium (Annual) or Starter (Monthly)
-- Start Date + End Date — end date auto-calculated (Premium = +1 year, Starter = +1 month)
-- State Access: All States OR custom checkbox selection
-- Industry Access: All Industries OR custom checkbox selection
-- Source: hardcoded as `migrated`
-- Credits: 99999 (unlimited) — daily_limit and weekly_limit also 99999
-- Plan Status: always `active` on creation
-- Generate Password button included
-- Info banner explains this is for legacy paid subscribers only
-
-### Subscriber Dashboard
-
-#### dashboard/index.php — Welcome Banner Updated ✅
-- Changed "your complimentary access is ready" → "welcome to NPT Intelligence"
-- New body text: beta rollout messaging — "you are among the first to access it"
-- Retains WhatsApp contact line
-
-#### dashboard/_layout.php — Button Text Updated ✅
-- "Upgrade Plan" button → "Pricing Plans"
-
-#### dashboard/companies.php — Published Projects Filter ✅
-- Companies listing now only shows companies with at least one published project
-- Fixed states dropdown — only shows states from companies with published projects
-- WHERE clause uses EXISTS subquery against npis_refer + npis_projects (proj_show='YES')
-
-#### dashboard/company.php — Three Fixes ✅
-
-**Fix 1 — Redirect if no published projects:**
-- Added check after fetching company — if zero published projects, redirect to companies listing
-- Prevents empty company pages from appearing
-
-**Fix 2 — Address from npt_company_addresses:**
-- Company detail page now pulls from `npt_company_addresses` first (not just npis_companies)
-- Shows all address records for the company (each with address_type badge)
-- Shows full address, tel, email, website, key persons per address record
-- Falls back to npis_companies fields if no npt_company_addresses records exist
-- Contact block now spans full width (grid-column: 1/-1)
-
-**Fix 3 — CapEx News (attempted, reverted):**
-- Attempted name-based match between blog.company and npis_companies.comp_company
-- Name mismatch issue (e.g. "NTPC Ltd" vs "NTPC") — query not reliable
-- Reverted cleanly — no news section on company page
-- To be revisited post-launch with a proper company_id linkage in blog table
-
----
-
-## Console Portal — All Files
-
-| File | Purpose | Status |
-|------|---------|--------|
-| index.php | Dashboard — 4 source panels | ✅ Day 35 |
-| users.php | All users — filterable by source | ✅ Day 35 |
-| user.php | Individual user view/edit/delete | ✅ Day 35 |
-| add_user.php | Add legacy subscriber (simplified) | ✅ Day 36 |
-| add_user_full.php | Full add user form (parked) | 🔲 Parked |
-| activity.php | Activity feed | ✅ |
-| logins.php | Login history | ✅ |
-| rfq.php | RFQ management | ✅ |
-| _layout.php | Sidebar + topbar | ✅ |
-| _layout_end.php | Footer | ✅ Day 35 |
-| _auth.php | Auth guard | ✅ |
+Step 1: /admin/crud.php — Add project, connect company
+Step 2: /admin/project_address.php — Connect address
+Step 3: /admin/projects.php — Repository → Publish
+Step 4: /admin/project.php?id=X — View published project
+```
 
 ---
 
@@ -186,7 +163,7 @@ mysql -u newp_npt_ai_user -pnpt_ai_user@123 newp_ai_engine < /home/newprojectstr
 | A2 | crud.php — Add/Edit Project | ✅ Done |
 | A3 | add_company.php — Add Company | ✅ Done |
 | A4 | company.php — View/Edit/Delete | ✅ Done |
-| A5 | companies.php — All Companies | 🔲 After data import |
+| A5 | companies.php — All Companies | 🔲 Pending |
 | A6 | projects.php — All Projects | 🔲 Pending |
 | A7 | project.php — Project View | 🔲 Check/Polish |
 | A8 | project_address.php | ✅ Good |
@@ -197,21 +174,37 @@ mysql -u newp_npt_ai_user -pnpt_ai_user@123 newp_ai_engine < /home/newprojectstr
 
 ---
 
+## Console Portal — All Files
+
+| File | Purpose | Status |
+|------|---------|--------|
+| index.php | Dashboard — 4 source panels | ✅ |
+| users.php | All users — filterable by source | ✅ |
+| user.php | Individual user view/edit/delete | ✅ |
+| add_user.php | Add legacy subscriber (simplified) | ✅ |
+| add_user_full.php | Full add user form (parked) | 🔲 Parked |
+| activity.php | Activity feed | ✅ |
+| logins.php | Login history | ✅ |
+| rfq.php | RFQ management | ✅ |
+| _layout.php | Sidebar + topbar | ✅ |
+| _layout_end.php | Footer | ✅ |
+| _auth.php | Auth guard | ✅ |
+
+---
+
 ## Subscriber Dashboard — File Status
 
 | File | Purpose | Status |
 |------|---------|--------|
 | index.php | Dashboard home | ✅ |
-| projects.php | Project listing + search | ✅ |
-| project.php | Project story (credit-gated) | ✅ |
-| companies.php | Companies listing | ✅ Fixed Day 36 |
-| company.php | Company detail page | ✅ Fixed Day 36 |
+| projects.php | Project listing + search | ✅ — freshness badges tomorrow |
+| project.php | Project story (credit-gated) | ✅ — warning banner tomorrow |
+| companies.php | Companies listing | ✅ |
+| company.php | Company detail page | ✅ |
 | news.php | CapEx News listing | ✅ |
 | news_article.php | CapEx News article | ✅ |
 | briefcase.php | Saved projects | ✅ |
 | pricing.php | Pricing plans | ✅ |
-| coming_soon.php | Placeholder pages | ✅ |
-| legacy_welcome.php | Legacy user welcome | ✅ |
 | _layout.php | Sidebar + topbar | ✅ |
 | _layout_end.php | Footer | ✅ |
 | _auth.php | Auth guard | ✅ |
@@ -220,39 +213,38 @@ mysql -u newp_npt_ai_user -pnpt_ai_user@123 newp_ai_engine < /home/newprojectstr
 
 ## Full Pending Task List
 
-### 🔴 IMMEDIATE — Day 37 First Task
-1. **npis_companies contact data re-import** — comp_tel1, comp_tel2, comp_email1, comp_email2
+### 🔴 DAY 38 — FIRST TASK
+1. **Project freshness indicator system** — age badges on listing, warning banner on story, Request Update button
 
-### 🟠 AFTER DATA IMPORT
-2. Testing results from Kavitha — fix any issues found
+### 🟠 AFTER FRESHNESS SYSTEM
+2. Roll out to all migrated + lapsed users
 3. Admin revamp — companies.php, projects.php, check repository/daily/weekly/news
-4. Project PDF download (dashboard/project.php) — elegant 2-page printable
-5. Full rollout to all migrated + lapsed users
+4. Project PDF download — elegant 2-page printable
 
 ### 🟡 SUBSCRIBER DASHBOARD
-6. Email SMTP fix (kavita@nptonline.com creds pending)
-7. My Profile page
-8. Downloads section
-9. Book a Demo form
-10. Fix &apos; entities in CapEx News sidebar
+5. Email SMTP fix (kavita@nptonline.com creds pending)
+6. My Profile page
+7. Downloads section
+8. Book a Demo form
+9. Fix &apos; entities in CapEx News sidebar
 
 ### 🟠 PRE-JULY 1
-11. Registration redesign — OTP flow (Fast2SMS key pending)
-12. Razorpay online payment (Key Secret pending)
-13. Client logos for homepage
-14. GSTIN for Kariyamangalam Technologies
+10. Registration redesign — OTP flow (Fast2SMS key pending)
+11. Razorpay online payment (Key Secret pending)
+12. Client logos for homepage
+13. GSTIN for Kariyamangalam Technologies
 
 ### 🔵 ORDERS PORTAL (Post-Beta)
-15. npt_quotations, npt_orders, npt_payments, npt_invoices
-16. /orders/ portal build
+14. npt_quotations, npt_orders, npt_payments, npt_invoices
+15. /orders/ portal build
 
 ### ⚫ POST-LAUNCH
-17. AI Enrichment Pipeline (~$280)
-18. Tag auto-population (~$8-10)
-19. nptintelligence.ai domain
-20. PitchOS + AI Tools
-21. SEO public pages
-22. CapEx News ↔ Company linkage (blog table needs company_id field)
+16. AI Enrichment Pipeline (~$280)
+17. Tag auto-population (~$8-10)
+18. nptintelligence.ai domain
+19. PitchOS + AI Tools
+20. SEO public pages
+21. CapEx News ↔ Company linkage (blog table needs company_id field)
 
 ---
 
@@ -260,7 +252,6 @@ mysql -u newp_npt_ai_user -pnpt_ai_user@123 newp_ai_engine < /home/newprojectstr
 
 | Item | Needed For | Status |
 |------|-----------|--------|
-| npis_companies SQL from GoDaddy | Contact data re-import | ✅ Ready — upload Day 37 |
 | kavita@nptonline.com SMTP creds | Email notifications | ⏳ Pending |
 | Fast2SMS API key | Registration OTP | ⏳ Pending |
 | npis_users SQL dump (GoDaddy) | Legacy user migration | ⏳ Pending |
@@ -275,7 +266,7 @@ mysql -u newp_npt_ai_user -pnpt_ai_user@123 newp_ai_engine < /home/newprojectstr
 
 ### Core
 - `npis_projects` — 40,000+ rows ⚠️ CPU risk on full scans
-- `npis_companies` — 36,695 rows (comp_tel1/tel2/email1/email2 partially empty — fix Day 37)
+- `npis_companies` — 36,695 rows ✅ contact data re-imported Day 37
 - `npis_refer` — 50,845+ rows (ref_address_id, ref_comptype, ref_primary)
 - `npt_company_addresses` ✅
 
@@ -284,8 +275,11 @@ mysql -u newp_npt_ai_user -pnpt_ai_user@123 newp_ai_engine < /home/newprojectstr
 - `npt_admin_users`, `npt_console_users`
 - `npt_activity_log`, `npt_contact_forms`, `npt_rfq`
 
+### To Create (Day 38)
+- `npt_update_requests` — (proj_id, user_id, requested_at, status) for Request Update feature
+
 ### Imported
-- `blog` — 6,537 CapEx news articles (no company_id — name match only, unreliable)
+- `blog` — 6,537 CapEx news articles
 
 ---
 
@@ -299,6 +293,7 @@ mysql -u newp_npt_ai_user -pnpt_ai_user@123 newp_ai_engine < /home/newprojectstr
 - Only Repository projects can be published
 - npis_companies: one company = multiple rows, each = different address
 - ⚠️ Full table scans on npis_projects (40k rows) = CPU risk. Always flag before building.
+- Age badges use proj_updateddate (not proj_takendate)
 
 ---
 
@@ -349,4 +344,5 @@ mysql -u newp_npt_ai_user -pnpt_ai_user@123 newp_ai_engine < /home/newprojectstr
 | 33 | 9 May | company.php 500 fixed. Web root confirmed |
 | 34 | 11 May | project.php: company name, contacts block, SQL fix. Data gap found. Backup taken |
 | 35 | 15 May | Console: index.php 4 panels, user.php fixes, users.php source filter, footer fixed |
-| 36 | 15 May | Console add_user.php simplified for legacy rollout. Dashboard banner + button text updated. companies.php filtered to published-only. company.php address fix + redirect fix. CapEx news attempted + reverted. CPU warning rule added. |
+| 36 | 15 May | Console add_user.php simplified. Banner updated. companies.php + company.php fixed |
+| 37 | 17 May | npis_companies contact re-import complete (8,229 rows updated). Site ready for migrated user rollout. Project freshness system planned for Day 38. |
