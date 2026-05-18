@@ -1,6 +1,6 @@
 # NPT Intelligence Platform — Build README
 
-**Last Updated: 17 May 2026 (Day 37)**
+**Last Updated: 18 May 2026 (Day 38)**
 
 ---
 
@@ -20,6 +20,8 @@
 12. **Git** — Server is NOT linked to GitHub. Files edited directly on server.
 13. **npis_companies data model** — One company = multiple rows, each = different address. All linked via npis_refer with different ref_comptype values.
 14. **⚠️ CPU WARNING** — npis_projects has 40,000+ rows. Any feature involving full-table search/scan MUST be flagged before building. Always use indexed fields, LIMIT clauses, avoid COUNT DISTINCT JOINs.
+15. **Age badges use proj_updateddate** — not proj_takendate.
+16. **Correct login URL** — `/login.php` (NOT `/dashboard/login.php`)
 
 ---
 
@@ -27,7 +29,7 @@
 
 | System | URL | Team | Status |
 |--------|-----|------|--------|
-| NPT Subscriber Portal | /dashboard/ | Paid subscribers | ✅ Live — Beta rollout ready |
+| NPT Subscriber Portal | /dashboard/ | Paid subscribers | ✅ Live — Beta rollout active |
 | NPT Admin Portal | /admin/ | Researchers | ✅ Live — Revamp in progress |
 | NPT Console | /console/ | Marketing/Sales (Kavitha) | ✅ Live |
 | NPT Orders Portal | /orders/ | Sales & Finance | 🔲 To Build |
@@ -61,97 +63,111 @@
 
 ---
 
-## Plan Names
-| Plan | Price |
-|------|-------|
-| Basic | ₹0 / forever |
-| Starter | ₹14,950/month |
-| Premium | ₹99,000/year |
+## Plan Names & Access Rules
+
+| Plan | Price | Archive Access | Project Views |
+|------|-------|---------------|---------------|
+| Basic | ₹0 | None | 5/month |
+| Starter | ₹14,950/month | plan_start minus 3 months | Unlimited within window |
+| Premium | ₹99,000/year | Full — all 40,000+ projects | Unlimited |
 
 ---
 
-## 🔴 TOP PRIORITY — DAY 38 (Tomorrow Morning)
+## Day 38 — What Was Done (18 May 2026)
 
-### Project Freshness Indicator System
+### 1. Project Freshness Indicator System ✅
 
-**Background:**
-NPT database has 40,000+ projects going back to 2012. Old projects appear in search results alongside fresh ones, causing subscriber disappointment and sales issues. Prospects think coverage is weak when old projects don't appear, but subscribers are frustrated when they click on a 4-year-old project.
+#### dashboard/projects.php
+- Added `freshness()` function — calculates age from `proj_updateddate`
+- Three tiers: 🟢 Fresh (≤12 months) / 🟡 Archived (1–3 years) / 🔴 Legacy (3+ years)
+- Age badge shown on every project in both table and card view
+- Backed up as `projects_backup.php` before changes
 
-**Solution — Three-layer approach:**
+#### dashboard/project.php
+- Warning banner on all projects older than 12 months
+- 🟡 Archived banner — amber, "last tracked X months ago"
+- 🔴 Legacy banner — red, "last tracked X years ago"
+- "Request Latest Update →" button on all old projects
+- Button logs to `npt_update_requests` table (auto-created if not exists)
+- After clicking — confirmation message shown, no duplicate requests within 7 days
+- Backed up as `project_backup.php` before changes
 
-**Layer 1: Age badge on every project listing card**
-Based on `proj_updateddate`:
-- 🟢 Fresh — updated within 12 months
-- 🟡 Archived — 1 to 3 years old  
-- 🔴 Legacy — 3+ years old
+### 2. Date Filter on Projects Listing ✅
 
-**Layer 2: Warning banner on old project story pages**
-For projects older than 12 months — show a visible banner:
-*"This project was last tracked in [year]. Our team can check for latest developments on request."*
-Plus a "Request Update" button.
+#### dashboard/projects.php
+- Added second filter row below main filters
+- Quick select: Last 7 / 15 / 30 days, Last 3 / 6 months, Last 1 year — auto-submits on change
+- Date range picker: From Date + To Date + Apply button
+- "Clear Date" button resets date filters while keeping other filters
+- Both date filters based on `proj_updateddate`
+- Pagination preserves all date filter parameters correctly
+- Stage filter removed from main filter row (kept in DB query for URL-based filtering)
 
-**Layer 3: Request Update logging**
-- New table: `npt_update_requests` (proj_id, user_id, requested_at, status)
-- Simple insert on button click — no email needed yet
-- Internal team sees requests and prioritizes research
+### 3. Starter Plan Archive Gate ✅
 
-**Files to touch:**
-- `dashboard/projects.php` — add age badge to listing cards
-- `dashboard/project.php` — add warning banner + Request Update button
-- DB: create `npt_update_requests` table
+#### dashboard/_auth.php
+- Added `plan_start` to session data fetch
+- Session condition updated to re-fetch if `plan_start` missing
+- `$auth_plan_start` now available across all dashboard pages
 
-**Rollback guarantee:**
-- Both files backed up before any changes
-- Age badges are CSS/display only — zero DB changes to existing tables
-- Warning banner is read-only — just reads proj_updateddate
-- New table can be dropped instantly if needed
-- Revert = one file restore command per file
+#### dashboard/projects.php
+- `$starter_cutoff` = `plan_start - 3 months` for starter users
+- Projects older than cutoff shown greyed out (opacity 0.55) with 🔒 icon
+- Locked projects not clickable (pointer-events:none on cards)
+- Inline message: "Outside your plan's archive window · Upgrade to Premium"
+- Premium users — no restriction, full access
 
-**Age calculation field:** `proj_updateddate` (reflects last knowledge, not just entry date)
+#### dashboard/project.php
+- Starter users hitting locked project → "Archive Access Required" gate page
+- Shows their archive window start date
+- Shows project's last updated date
+- "Upgrade to Premium →" button + "← Back to Projects" button
+- No credit consumed for gated projects
 
----
+### 4. Public Pages Fixes ✅
 
-## Day 37 — What Was Done (17 May 2026)
+#### login.php
+- Removed "Forgot your password?" link (email not configured yet)
 
-### npis_companies Contact Data Re-Import ✅ COMPLETE
-
-**What was done:**
-- GoDaddy legacy `npis_companies` SQL (14MB, 36,882 rows) uploaded to server
-- Python script written and executed — parsed all rows, updated 4 fields:
-  - `comp_tel1` — Key Person 1 phone
-  - `comp_tel2` — Key Person 1 alternate phone
-  - `comp_email1` — Key Person 1 email
-  - `comp_email2` — Key Person 2 email
-- UPDATE logic: IF(field = '' OR field IS NULL, new_value, keep_existing) — never overwrites
-- 8,229 rows processed with data, 28,652 skipped (already had data or legacy was also blank)
-- 1 collation error (minor, one row) — not significant
-
-**Verification:**
-- Fermenta Biotech (comp_id 15999) confirmed: comp_tel1=022-67910888, comp_tel2=022-67910800, comp_email1=prashant.puranik@fermentabiotech.com ✅
-- Subscriber dashboard company page showing correctly with all contact details ✅
-
-**Key finding:**
-- Only 3,584 companies (out of 36,695) have `comp_tel1` populated
-- The legacy DB itself only had phone/email for ~10% of key persons
-- Data was simply never collected for most records — not a migration issue
-- Staff will fill gaps over time via admin/company.php edit form
-
-**Cleanup:**
-- SQL file deleted from public_html after import ✅
-- Backup remains at: `/home/newprojectstracker.in/npis_companies_backup_20260511.sql`
-
-**Status: COMPLETE. Site ready for migrated user rollout.**
+#### register.php
+- Fixed "Already have access? Sign in now" link → `/login.php` (was pointing to `/dashboard/login.php`)
 
 ---
 
-## Complete Project Entry Workflow (Final)
+## New DB Table Created
 
+### npt_update_requests
+```sql
+CREATE TABLE IF NOT EXISTS npt_update_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    proj_id INT NOT NULL,
+    user_id INT NOT NULL,
+    proj_name VARCHAR(255),
+    requested_at DATETIME DEFAULT NOW(),
+    status VARCHAR(20) DEFAULT 'pending'
+);
 ```
-Step 1: /admin/crud.php — Add project, connect company
-Step 2: /admin/project_address.php — Connect address
-Step 3: /admin/projects.php — Repository → Publish
-Step 4: /admin/project.php?id=X — View published project
-```
+- Auto-created on first "Request Update" button click
+- Duplicate prevention: same user + same project within 7 days = ignored
+
+---
+
+## Subscriber Dashboard — File Status
+
+| File | Purpose | Status |
+|------|---------|--------|
+| index.php | Dashboard home | ✅ |
+| projects.php | Project listing + search + date filter + starter gate | ✅ Day 38 |
+| project.php | Project story + freshness banner + request update + starter gate | ✅ Day 38 |
+| companies.php | Companies listing (published only) | ✅ |
+| company.php | Company detail page | ✅ |
+| news.php | CapEx News listing | ✅ |
+| news_article.php | CapEx News article | ✅ |
+| briefcase.php | Saved projects | ✅ |
+| pricing.php | Pricing plans | ✅ |
+| _auth.php | Auth guard + plan_start session | ✅ Day 38 |
+| _layout.php | Sidebar + topbar | ✅ |
+| _layout_end.php | Footer | ✅ |
 
 ---
 
@@ -192,59 +208,37 @@ Step 4: /admin/project.php?id=X — View published project
 
 ---
 
-## Subscriber Dashboard — File Status
-
-| File | Purpose | Status |
-|------|---------|--------|
-| index.php | Dashboard home | ✅ |
-| projects.php | Project listing + search | ✅ — freshness badges tomorrow |
-| project.php | Project story (credit-gated) | ✅ — warning banner tomorrow |
-| companies.php | Companies listing | ✅ |
-| company.php | Company detail page | ✅ |
-| news.php | CapEx News listing | ✅ |
-| news_article.php | CapEx News article | ✅ |
-| briefcase.php | Saved projects | ✅ |
-| pricing.php | Pricing plans | ✅ |
-| _layout.php | Sidebar + topbar | ✅ |
-| _layout_end.php | Footer | ✅ |
-| _auth.php | Auth guard | ✅ |
-
----
-
 ## Full Pending Task List
 
-### 🔴 DAY 38 — FIRST TASK
-1. **Project freshness indicator system** — age badges on listing, warning banner on story, Request Update button
+### 🔴 NEXT SESSION — TOP PRIORITY
+1. Testing results from migrated users — fix any issues found
+2. Admin revamp — companies.php, projects.php, check repository/daily/weekly/news
 
-### 🟠 AFTER FRESHNESS SYSTEM
-2. Roll out to all migrated + lapsed users
-3. Admin revamp — companies.php, projects.php, check repository/daily/weekly/news
-4. Project PDF download — elegant 2-page printable
-
-### 🟡 SUBSCRIBER DASHBOARD
-5. Email SMTP fix (kavita@nptonline.com creds pending)
-6. My Profile page
-7. Downloads section
-8. Book a Demo form
-9. Fix &apos; entities in CapEx News sidebar
+### 🟠 SUBSCRIBER DASHBOARD
+3. Project PDF download — elegant 2-page printable
+4. Email SMTP fix (kavita@nptonline.com creds pending)
+5. My Profile page
+6. Downloads section
+7. Book a Demo form
+8. Fix &apos; entities in CapEx News sidebar
 
 ### 🟠 PRE-JULY 1
-10. Registration redesign — OTP flow (Fast2SMS key pending)
-11. Razorpay online payment (Key Secret pending)
-12. Client logos for homepage
-13. GSTIN for Kariyamangalam Technologies
+9. Registration redesign — OTP flow (Fast2SMS key pending)
+10. Razorpay online payment (Key Secret pending)
+11. Client logos for homepage
+12. GSTIN for Kariyamangalam Technologies
 
 ### 🔵 ORDERS PORTAL (Post-Beta)
-14. npt_quotations, npt_orders, npt_payments, npt_invoices
-15. /orders/ portal build
+13. npt_quotations, npt_orders, npt_payments, npt_invoices
+14. /orders/ portal build
 
 ### ⚫ POST-LAUNCH
-16. AI Enrichment Pipeline (~$280)
-17. Tag auto-population (~$8-10)
-18. nptintelligence.ai domain
-19. PitchOS + AI Tools
-20. SEO public pages
-21. CapEx News ↔ Company linkage (blog table needs company_id field)
+15. AI Enrichment Pipeline (~$280)
+16. Tag auto-population (~$8-10)
+17. nptintelligence.ai domain
+18. PitchOS + AI Tools
+19. SEO public pages
+20. CapEx News ↔ Company linkage (blog table needs company_id field)
 
 ---
 
@@ -274,9 +268,7 @@ Step 4: /admin/project.php?id=X — View published project
 - `npt_users` — plan_type: basic/starter/premium; source: migrated/lapsed/admin/self_register
 - `npt_admin_users`, `npt_console_users`
 - `npt_activity_log`, `npt_contact_forms`, `npt_rfq`
-
-### To Create (Day 38)
-- `npt_update_requests` — (proj_id, user_id, requested_at, status) for Request Update feature
+- `npt_update_requests` ✅ created Day 38
 
 ### Imported
 - `blog` — 6,537 CapEx news articles
@@ -294,6 +286,8 @@ Step 4: /admin/project.php?id=X — View published project
 - npis_companies: one company = multiple rows, each = different address
 - ⚠️ Full table scans on npis_projects (40k rows) = CPU risk. Always flag before building.
 - Age badges use proj_updateddate (not proj_takendate)
+- Correct login URL = /login.php (not /dashboard/login.php)
+- Starter plan cutoff = plan_start minus 3 months (rolling from user's plan start date)
 
 ---
 
@@ -312,6 +306,10 @@ Step 4: /admin/project.php?id=X — View published project
 | 36 | dashboard/companies.php | Companies with no published projects showing | Fixed |
 | 36 | dashboard/company.php | Address from npt_company_addresses not showing | Fixed |
 | 36 | dashboard/company.php | Empty company pages accessible | Fixed |
+| 38 | dashboard/_auth.php | plan_start not in session — starter gate not working | Fixed |
+| 38 | dashboard/projects.php | Pagination dropping date filter params | Fixed |
+| 38 | register.php | Sign in link pointing to /dashboard/login.php | Fixed |
+| 38 | login.php | Forgot password link shown (email not configured) | Removed |
 
 ---
 
@@ -345,4 +343,5 @@ Step 4: /admin/project.php?id=X — View published project
 | 34 | 11 May | project.php: company name, contacts block, SQL fix. Data gap found. Backup taken |
 | 35 | 15 May | Console: index.php 4 panels, user.php fixes, users.php source filter, footer fixed |
 | 36 | 15 May | Console add_user.php simplified. Banner updated. companies.php + company.php fixed |
-| 37 | 17 May | npis_companies contact re-import complete (8,229 rows updated). Site ready for migrated user rollout. Project freshness system planned for Day 38. |
+| 37 | 17 May | npis_companies contact re-import complete. Site ready for migrated user rollout |
+| 38 | 18 May | Freshness badges (Fresh/Archived/Legacy). Date filter on projects listing. Starter plan archive gate (locked projects + upgrade prompt). Request Update button. login.php forgot password removed. register.php sign-in link fixed. |
