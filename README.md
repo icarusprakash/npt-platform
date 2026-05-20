@@ -18,12 +18,17 @@
 10. **localhost in PHP** — Always use `$host = 'localhost'` not IP.
 11. **Web root** — `/home/newprojectstracker.in/public_html/` (NOT /var/www/)
 12. **Git** — Server is NOT linked to GitHub. Files edited directly on server.
-13. **npis_companies data model** — One company = multiple rows, each = different address. All linked via npis_refer with different ref_comptype values.
-14. **⚠️ CPU WARNING** — npis_projects has 40,000+ rows. Any feature involving full-table search/scan MUST be flagged before building.
+13. **npis_companies data model** — One company = multiple rows, each = different address.
+14. **⚠️ CPU WARNING** — npis_projects has 40,000+ rows. Full-table scans = CPU risk. Always flag before building.
 15. **Age badges use proj_updateddate** — not proj_takendate.
 16. **Correct login URL** — `/login.php` (NOT `/dashboard/login.php`)
-17. **Address deduplication** — project_address.php now checks for existing npt_company_addresses before INSERT. Never creates duplicates.
-18. **Dashboard project.php JOIN** — uses `a.id = r.ref_address_id` (connected address only), NOT `a.comp_id = c.comp_id` (all addresses).
+17. **Address deduplication** — project_address.php checks existing record before INSERT. No duplicates.
+18. **Dashboard project.php JOIN** — `a.id = r.ref_address_id` (connected address only).
+19. **ref_ID** — column name in npis_refer is `ref_ID` (capital ID) — always use exact case.
+20. **Unconnect address** → auto-unpublishes project (proj_show='NO', proj_repository='YES').
+21. **proj_updateddate** — staff sets manually in crud.php. Shown to subscribers as "Last Updated".
+22. **Starter plan cutoff** = plan_start minus 3 months (from user's plan_start date, not rolling).
+23. **Technical Base Project** — "NPT 2.0 Technical Base" created on Claude.ai with NPT_Master_Technical_Document.md as Project Knowledge. Update it when architecture changes.
 
 ---
 
@@ -52,9 +57,7 @@
 ## Login Credentials
 
 ### Jayaprakash (icarusprakash@gmail.com / Npt@2026)
-- Admin: https://newprojectstracker.in/admin/
-- Console: https://newprojectstracker.in/console/
-- Subscriber: https://newprojectstracker.in/dashboard/
+- Admin / Console / Subscriber — all portals
 
 ### Indscan (indscan.projects@gmail.com)
 - Admin: NPTAdmin2026! · Console: NPTConsole2026! · Subscriber: Npt@2026
@@ -66,70 +69,48 @@
 
 ## Plan Names & Access Rules
 
-| Plan | Price | Archive Access | Project Views |
-|------|-------|---------------|---------------|
+| Plan | Price | Archive Access | Credits |
+|------|-------|---------------|---------|
 | Basic | ₹0 | None | 5/month |
-| Starter | ₹14,950/month | plan_start minus 3 months | Unlimited within window |
-| Premium | ₹99,000/year | Full — all 40,000+ projects | Unlimited |
+| Starter | ₹14,950/month | plan_start - 3 months | 99999 (unlimited) |
+| Premium | ₹99,000/year | Full — all projects | 99999 (unlimited) |
 
 ---
 
 ## Day 39 — What Was Done (20 May 2026)
 
-### 1. Admin project.php — Connect / Unconnect Address ✅
+### Admin portal — project.php
+- Connect/Unconnect address buttons added to each address card
+- Unconnect sets ref_address_id=0 AND auto-unpublishes project
+- Connect sets ref_address_id=addr_id
+- Handler uses ref_ID (capital) — correct column name
+- Forms POST to /admin/project.php?id=X with proj_id_hidden field
 
-- Added **Unconnect** button on connected address card (red)
-- Added **Connect** button on unconnected address cards (green)
-- Both buttons POST to `/admin/project.php?id=X` with `ref_ID` and `addr_id`
-- **Unconnect** sets `ref_address_id = 0` in npis_refer
-- **Unconnect also auto-unpublishes** — sets `proj_show = 'NO'` and `proj_repository = 'YES'`
-- **Connect** sets `ref_address_id = addr_id` in npis_refer
-- Handler uses `ref_ID` (capital ID — correct column name in npis_refer)
+### project_address.php — Duplicate address fix
+- Root cause: "Yes — Use This Address" was always INSERTing new record
+- Fix: checks if npt_company_addresses record already exists for comp_id
+- If exists → reuses existing ID. If not → creates new.
 
-### 2. project_address.php — Duplicate Address Fix ✅
+### dashboard/project.php — Connected address only
+- JOIN fixed: `LEFT JOIN npt_company_addresses a ON a.id = r.ref_address_id`
+- Was pulling all addresses for company — now pulls only the connected one
 
-- Root cause: "Yes — Use This Address" was blindly INSERTing a new npt_company_addresses record every time
-- Fix: Check if record already exists for comp_id before INSERT
-- If exists → reuse existing record ID
-- If not → create new record
-- Eliminates duplicate address records going forward
+### dashboard/project.php — Project Not Available page
+- Unpublished project URLs now show elegant "Project Not Available" page
+- No redirect — graceful 📭 message with Back to Projects button
 
-### 3. dashboard/project.php — Connected Address Only ✅
+### admin/crud.php + crud_save.php — Updated Date field
+- New "Updated Date" field in project entry form
+- Default = today but editable — staff sets intended publication date
+- This is what subscribers see as "Last Updated"
+- INSERT and EDIT both use form value, not hardcoded today
 
-- Fixed JOIN: `LEFT JOIN npt_company_addresses a ON a.id = r.ref_address_id`
-- Was: `ON a.comp_id = c.comp_id` (pulled ALL addresses for company)
-- Now: only the specifically connected address shows on project story page
-
-### 4. dashboard/project.php — Project Not Available Page ✅
-
-- Subscribers visiting URL of unpublished project now see elegant "Project Not Available" page
-- Shows 📭 icon, message, "← Back to Projects" button
-- No redirect to listing — graceful handling
-
-### 5. admin/crud.php + crud_save.php — Updated Date Field ✅
-
-- Added "Updated Date" field in project entry form (below Taken Date)
-- Default = today, but editable — staff can set to intended publication date
-- This date is shown to subscribers as "Last Updated"
-- On INSERT: uses form value instead of hardcoded `$today`
-- On EDIT: always uses form value (removed conditional logic)
-
----
-
-## Address System — How It Works (Final)
-
-```
-1. Staff adds project → connects company
-2. project_address.php shows legacy address from npis_companies
-3. Staff clicks "Yes — Use This Address"
-   → Checks if npt_company_addresses record already exists for comp_id
-   → If yes: reuses existing record (no duplicate)
-   → If no: creates new record
-   → Sets npis_refer.ref_address_id = new/existing address ID
-4. admin/project.php shows address cards with Connect/Unconnect buttons
-5. dashboard/project.php shows ONLY the connected address (ref_address_id JOIN)
-6. If address unconnected → project auto-unpublishes → shows "Project Not Available" to subscribers
-```
+### NPT 2.0 Technical Base — Created
+- New Claude Project created: "NPT 2.0 Technical Base"
+- NPT_Master_Technical_Document.md uploaded as Project Knowledge (755 lines)
+- Instructions added defining purpose and usage rules
+- This is the permanent technical constitution — updated only on architectural changes
+- README_NPTINTEL.md remains the daily journal
 
 ---
 
@@ -141,65 +122,65 @@
 | A2 | crud.php — Add/Edit Project | ✅ Done + Updated Date field |
 | A3 | add_company.php — Add Company | ✅ Done |
 | A4 | company.php — View/Edit/Delete | ✅ Done |
-| A5 | companies.php — All Companies | 🔲 Pending |
-| A6 | projects.php — All Projects | 🔲 Pending |
-| A7 | project.php — Project View | ✅ Connect/Unconnect added |
+| A5 | companies.php — All Companies | 🔲 **Tomorrow** |
+| A6 | projects.php — All Projects listing | 🔲 **Tomorrow** |
+| A7 | project.php — Project View | ✅ Connect/Unconnect done |
 | A8 | project_address.php | ✅ Duplicate fix done |
 | A9 | company_addresses.php | ✅ Done |
-| A10 | repository / daily / weekly | 🔲 Check |
+| A10 | repository.php / daily.php / weekly.php | 🔲 Check |
 | A11 | news_crud.php | 🔲 Check |
 | A12 | news.php (admin) | 🔲 Check |
 
 ---
 
-## Subscriber Dashboard — File Status
+## 🗓️ TOMORROW'S WORK PLAN (Day 40)
 
-| File | Purpose | Status |
-|------|---------|--------|
-| index.php | Dashboard home | ✅ |
-| projects.php | Project listing + date filter + starter gate | ✅ |
-| project.php | Project story + freshness + starter gate + unavailable page | ✅ Day 39 |
-| companies.php | Companies listing (published only) | ✅ |
-| company.php | Company detail page | ✅ |
-| news.php | CapEx News listing | ✅ |
-| briefcase.php | Saved projects | ✅ |
-| pricing.php | Pricing plans | ✅ |
-| _auth.php | Auth guard + plan_start session | ✅ |
-| _layout.php | Sidebar + topbar | ✅ |
+### Priority 1 — Admin Revamp (complete these)
+1. **companies.php** — All companies listing with search, state filter, pagination
+2. **projects.php** — All projects listing with filters (industry, state, stage, status), pagination
+3. **repository.php / daily.php / weekly.php** — Check they work correctly, fix if needed
+4. **news.php + news_crud.php** — Confirm admin news management works
+
+### Priority 2 — Subscriber Dashboard
+5. **Project PDF download** — elegant 2-page printable premium report
+6. **&apos; entity fix** — CapEx News sidebar showing HTML entities
+
+### Priority 3 — If time permits
+7. **My Profile page** — edit profile, change password, usage stats
 
 ---
 
 ## Full Pending Task List
 
-### 🔴 NEXT SESSION
-1. Admin revamp — companies.php, projects.php listing pages
-2. Check repository / daily / weekly / news pages
+### 🔴 ADMIN REVAMP (In Progress)
+- companies.php, projects.php listing pages
+- repository/daily/weekly/news pages check
 
 ### 🟠 SUBSCRIBER DASHBOARD
-3. Project PDF download — elegant 2-page printable
-4. Email SMTP fix (kavita@nptonline.com creds pending)
-5. My Profile page
-6. Downloads section
-7. Book a Demo form
-8. Fix &apos; entities in CapEx News sidebar
+- Project PDF download
+- Email SMTP fix (kavita@nptonline.com creds pending)
+- My Profile page
+- Downloads section
+- Book a Demo form
+- Fix &apos; in CapEx News sidebar
 
 ### 🟠 PRE-JULY 1
-9. Registration redesign — OTP flow (Fast2SMS key pending)
-10. Razorpay online payment (Key Secret pending)
-11. Client logos for homepage
-12. GSTIN for Kariyamangalam Technologies
+- Registration redesign — OTP (Fast2SMS key pending)
+- Razorpay online payment (Key Secret pending)
+- Client logos for homepage
+- GSTIN for Kariyamangalam Technologies
 
 ### 🔵 ORDERS PORTAL (Post-Beta)
-13. npt_quotations, npt_orders, npt_payments, npt_invoices
-14. /orders/ portal build
+- Tables: npt_quotations, npt_orders, npt_payments, npt_invoices
+- /orders/ portal build
 
 ### ⚫ POST-LAUNCH
-15. AI Enrichment Pipeline (~$280)
-16. Tag auto-population (~$8-10)
-17. nptintelligence.ai domain
-18. PitchOS + AI Tools
-19. SEO public pages
-20. CapEx News ↔ Company linkage
+- AI Enrichment Pipeline (~$280)
+- Tag auto-population (~$8-10)
+- nptintelligence.ai domain
+- PitchOS + AI Tools
+- SEO public pages
+- CapEx News ↔ Company linkage
 
 ---
 
@@ -207,8 +188,8 @@
 
 | Item | Needed For | Status |
 |------|-----------|--------|
-| kavita@nptonline.com SMTP creds | Email notifications | ⏳ Pending |
-| Fast2SMS API key | Registration OTP | ⏳ Pending |
+| kavita@nptonline.com SMTP creds | Email | ⏳ Pending |
+| Fast2SMS API key | OTP registration | ⏳ Pending |
 | Razorpay Key Secret | Online payment | ⏳ Pending |
 | Client logo image files | Homepage | ⏳ Pending |
 | GSTIN of Kariyamangalam Technologies | Tax invoice | ⏳ Pending |
@@ -216,19 +197,36 @@
 
 ---
 
-## Database Tables
+## Database Tables — Quick Reference
 
 ### Core
-- `npis_projects` — 40,000+ rows ⚠️ CPU risk on full scans
-- `npis_companies` — 36,695 rows ✅ contact data re-imported Day 37
-- `npis_refer` — ref_ID (capital), ref_address_id, ref_comptype, ref_primary
-- `npt_company_addresses` ✅ — deduplication fixed Day 39
+- `npis_projects` — 40,000+ rows ⚠️ CPU risk
+- `npis_companies` — 36,695 rows
+- `npis_refer` — 50,845+ rows (ref_ID capital, ref_address_id, ref_comptype, ref_primary)
+- `npt_company_addresses` ✅
 
 ### Platform
-- `npt_users` — plan_type: basic/starter/premium; source: migrated/lapsed/admin/self_register
-- `npt_update_requests` ✅ created Day 38
-- `npt_activity_log`, `npt_contact_forms`, `npt_rfq`
+- `npt_users` — source: migrated/lapsed/admin/self_register
+- `npt_admin_users`, `npt_console_users`
+- `npt_activity_log`, `npt_briefcase`, `npt_rfq`
+- `npt_update_requests` ✅
 - `blog` — 6,537 CapEx news articles
+
+---
+
+## Key Rules (Always Apply)
+- newprojectstracker.com: NEVER TOUCH
+- proj_history — INTERNAL ONLY
+- proj_industry NOT proj_sector
+- proj_equipments — ignore, use proj_equip_tags
+- Company names never on listing pages
+- Address saves → npt_company_addresses only
+- Only Repository projects can be published
+- ref_ID (capital ID) in npis_refer
+- Unconnect address → auto-unpublishes
+- proj_updateddate — manually set by staff, shown to subscribers
+- Starter cutoff = plan_start - 3 months
+- Login URL = /login.php
 
 ---
 
@@ -236,22 +234,19 @@
 
 | Day | File | Bug | Fix |
 |-----|------|-----|-----|
-| 16 | crud_save.php | Email whitelist, extra column, date, ref_ID | Fixed |
-| 21 | _auth.php, news pages | localhost corruption, missing session_start | Fixed |
-| 22 | crud/project_address | Date hardcoding, updateddate, redirect | Fixed |
-| 19 | crud.php | saveAndConnectCompany JS bug | Fixed |
+| 16 | crud_save.php | 4 bugs — email whitelist, column count, date, ref_ID | Fixed |
+| 21 | _auth.php | localhost corruption | Fixed |
 | 33 | admin/company.php | Mixed quotes → HTTP 500 | Fixed |
-| 34 | dashboard/project.php | comp_fax/email1/email2 missing from SQL | Fixed |
-| 35 | console/_layout_end.php | Footer floating outside content area | Fixed |
-| 35 | console/user.php | 2-col grid too narrow, credits_used editable | Fixed |
-| 36 | dashboard/companies.php | Companies with no published projects showing | Fixed |
-| 36 | dashboard/company.php | Address from npt_company_addresses not showing | Fixed |
-| 38 | dashboard/_auth.php | plan_start not in session | Fixed |
-| 38 | dashboard/projects.php | Pagination dropping date filter params | Fixed |
-| 39 | project_address.php | Duplicate address records on every "Use This Address" | Fixed |
-| 39 | dashboard/project.php | All company addresses showing instead of connected only | Fixed |
-| 39 | admin/project.php | Connect/Unconnect handler missing, ref_id case wrong | Fixed |
-| 39 | dashboard/project.php | Unpublished project URL showing blank | Fixed |
+| 34 | dashboard/project.php | Missing contact fields in SQL | Fixed |
+| 35 | console/_layout_end.php | Footer floating | Fixed |
+| 36 | dashboard/companies.php | Unpublished companies showing | Fixed |
+| 36 | dashboard/company.php | Wrong address source + empty pages | Fixed |
+| 38 | dashboard/_auth.php | plan_start missing from session | Fixed |
+| 38 | dashboard/projects.php | Pagination dropping date params | Fixed |
+| 39 | project_address.php | Duplicate address on every "Use This" | Fixed |
+| 39 | dashboard/project.php | All addresses showing instead of connected | Fixed |
+| 39 | admin/project.php | Connect/Unconnect handler missing | Fixed |
+| 39 | dashboard/project.php | Unpublished URL showing blank | Fixed |
 | 39 | crud_save.php | proj_updateddate hardcoded to today | Fixed |
 
 ---
@@ -261,17 +256,13 @@
 | Day | Date | Key Deliverables |
 |-----|------|-----------------|
 | 1–8 | Early Apr | Subscriber dashboard, waitlist |
-| 9–10 | 14 Apr | Admin panel, Watchlist |
-| 11–15 | 15–20 Apr | Import pipeline, admin portal, console, activity, public site |
-| 16 | 21 Apr | Branding. Plan rename. crud_save bugs |
-| 17–18 | 22–23 Apr | Address system. project_address.php |
-| 19–20 | 25–26 Apr | crud.php legacy layout. Planning session |
-| 21 | 27 Apr | CapEx News module. blog.sql imported |
-| 23–26 | 28 Apr–2 May | Sidebar, dashboard, launch strategy, beta page, lapsed users |
+| 9–15 | 14–20 Apr | Admin, console, import pipeline, public site |
+| 16–19 | 21–25 Apr | Bug fixes, address system, crud.php |
+| 20–26 | 25 Apr–2 May | Planning, CapEx News, launch strategy, beta |
 | 27–28 | 4 May | Lapsed system, RFQ, PHPMailer, AI shelved |
-| 29–32 | 5–8 May | Dashboard tuning, admin revamp, address system |
-| 33–34 | 9–11 May | company.php 500 fix, project.php contacts, data gap found |
-| 35–36 | 15 May | Console fixes, add_user simplified, dashboard fixes |
-| 37 | 17 May | npis_companies contact re-import complete |
-| 38 | 18 May | Freshness badges, date filter, starter gate, login/register fixes |
-| 39 | 20 May | Connect/Unconnect address, duplicate address fix, updated date field, project unavailable page, auto-unpublish on unconnect |
+| 29–32 | 5–8 May | Dashboard tuning, admin revamp |
+| 33–34 | 9–11 May | Bugs fixed, contacts block, data gap found |
+| 35–36 | 15 May | Console fixes, add_user simplified |
+| 37 | 17 May | Contact data re-import complete |
+| 38 | 18 May | Freshness badges, date filter, starter gate |
+| 39 | 20 May | Connect/Unconnect, duplicate fix, updated date field, unavailable page, NPT 2.0 Technical Base project created |
